@@ -16,23 +16,45 @@ type Suite struct {
 }
 
 func (this *Suite) lex(s string) ([]lexing.Token, error) {
-	result, err := lexing.New().Lex([]byte(s))
-	if result != nil {
-		this.Println("tokens:", result)
+	lexer := lexing.New([]byte(s))
+	go lexer.Lex()
+	output := lexer.Output()
+	var result []lexing.Token
+	for token := range output {
+		result = append(result, token)
 	}
-	if err != nil {
-		this.Println("err:", err)
-	}
-	return result, err
+	return result, lexer.Error()
+}
+func (this *Suite) assertSuccess(input string, expected ...lexing.Token) {
+	tokens, err := this.lex(input)
+	this.So(err, should.BeNil)
+	this.So(tokens, should.Equal, expected)
+}
+func (this *Suite) assertFailure(input string, expected error) {
+	tokens, err := this.lex(input)
+	this.So(tokens, should.BeNil)
+	this.So(err, should.WrapError, expected)
 }
 
-func (this *Suite) TestNoInput() {
-	tokens, err := this.lex("")
-	this.So(tokens, should.BeNil)
-	this.So(err, should.WrapError, lexing.ErrUnexpectedEOF)
+func (this *Suite) TestTopLevel_Blank() {
+	this.assertFailure("", lexing.ErrUnexpectedEOF)
 }
-func (this *Suite) TestOnlyWhitespace() {
-	tokens, err := this.lex(" ")
-	this.So(tokens, should.BeNil)
-	this.So(err, should.WrapError, lexing.ErrUnexpectedWhitespace)
+func (this *Suite) TestTopLevel_JustWhitespace() {
+	this.assertFailure(" ", lexing.ErrUnexpectedWhitespace)
 }
+func (this *Suite) TestTopLevel_Null() {
+	this.assertSuccess(`null`, lexing.Token{Type: lexing.TokenNull, Value: []byte("null")})
+}
+func (this *Suite) TestTopLevel_True() {
+	this.assertSuccess(`true`, lexing.Token{Type: lexing.TokenTrue, Value: []byte("true")})
+}
+func (this *Suite) TestTopLevel_False() {
+	this.assertSuccess(`false`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
+}
+func (this *Suite) SkipTestTopLevel_Number_0() {
+	this.assertSuccess(`0`, lexing.Token{Type: lexing.TokenZero, Value: []byte("0")})
+}
+
+//this.assertSuccess(`""`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
+//this.assertSuccess(`[]`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
+//this.assertSuccess(`{}`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
