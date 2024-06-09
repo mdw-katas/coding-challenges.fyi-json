@@ -27,7 +27,7 @@ type Token struct {
 	Value []byte
 }
 
-type stateFn func(*Lexer) stateFn
+type stateMethod func() stateMethod
 
 type Lexer struct {
 	input  []byte
@@ -64,8 +64,8 @@ func (this *Lexer) Lex() {
 		return
 	}
 
-	for state := lexValue; state != nil && this.pos < len(this.input); {
-		state = state(this)
+	for state := this.lexValue; state != nil && this.pos < len(this.input); {
+		state = state()
 	}
 }
 
@@ -81,7 +81,7 @@ func (this *Lexer) at(offset int) rune {
 	return rune(this.input[this.pos+offset])
 }
 
-func lexValue(this *Lexer) stateFn {
+func (this *Lexer) lexValue() stateMethod {
 	if bytes.HasPrefix(this.input, _null) {
 		this.pos += len(_null)
 		this.emit(TokenNull)
@@ -98,18 +98,18 @@ func lexValue(this *Lexer) stateFn {
 		return nil
 	}
 	if this.input[this.start] == _0 {
-		return lexZero
+		return this.lexZero
 	}
 	return nil
 }
 
-func lexZero(this *Lexer) stateFn {
+func (this *Lexer) lexZero() stateMethod {
 	this.pos++
 	this.emit(TokenZero)
-	return lexFraction
+	return this.lexFraction
 }
 
-func lexFraction(this *Lexer) stateFn {
+func (this *Lexer) lexFraction() stateMethod {
 	if this.at(0) == '.' && unicode.IsDigit(this.at(1)) { // TODO: hmm, only consider ascii digits
 		this.pos++
 		this.emit(TokenDecimalPoint)
