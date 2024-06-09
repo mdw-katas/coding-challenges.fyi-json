@@ -8,6 +8,6 @@ require (
 	github.com/mdwhatcott/go-set/v2 v2.0.1
 	github.com/mdwhatcott/must v1.2.0
 	github.com/mdwhatcott/slogging v1.0.0
-	github.com/mdwhatcott/testing v1.3.0
+	github.com/mdwhatcott/testing v1.4.1
 	github.com/mdwhatcott/tui/v2 v2.0.1
 )
