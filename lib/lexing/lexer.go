@@ -83,22 +83,22 @@ func lexTopLevelValue(this *Lexer) stateFn {
 		this.err = fmt.Errorf("%w at index %d", ErrUnexpectedWhitespace, 0)
 		return nil
 	}
-	if bytes.HasPrefix(this.input, _null) { // TODO: const
+	if bytes.HasPrefix(this.input, _null) {
 		this.pos += len(_null)
 		this.emit(TokenNull)
 		return nil
 	}
-	if bytes.HasPrefix(this.input, _true) { // TODO: const
+	if bytes.HasPrefix(this.input, _true) {
 		this.pos += len(_true)
 		this.emit(TokenTrue)
 		return nil
 	}
-	if bytes.HasPrefix(this.input, _false) { // TODO: const
+	if bytes.HasPrefix(this.input, _false) {
 		this.pos += len(_false)
 		this.emit(TokenFalse)
 		return nil
 	}
-	if this.input[this.start] == _0 { // TODO: const
+	if this.input[this.start] == _0 {
 		return lexZero
 	}
 	return nil
