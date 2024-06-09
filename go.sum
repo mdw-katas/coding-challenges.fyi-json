@@ -8,7 +8,7 @@ github.com/mdwhatcott/must v1.2.0 h1:X+Ay0ZIp2pMFT0HpFwxg8sCvZOAeyRPb+yQ477DWhbs
 github.com/mdwhatcott/must v1.2.0/go.mod h1:3rldN1MW4me3st97YNJxDm3L+zo5R5kKoh7Km75kWnY=
 github.com/mdwhatcott/slogging v1.0.0 h1:obpPne/9MV0tjHV1X7l2vepmWLd4HKa341yqOOa1jOo=
 github.com/mdwhatcott/slogging v1.0.0/go.mod h1:3q7t9MfCAxBp/XRsGRj6q4S2vyFUFalMIEOv0sQCKTQ=
-github.com/mdwhatcott/testing v1.4.1 h1:IJqcudSLPljlmgmJUK2WF0jD2/Fup7M1AF/PIbQEhPk=
-github.com/mdwhatcott/testing v1.4.1/go.mod h1:qw9pmVND0BqPmN/DE1BtaVzIvmQcffQAY+DOpnZ3qMo=
+github.com/mdwhatcott/testing v1.4.2 h1:xE9uI+0TiQTYKY45+W0t2XO89wgj4YANjd3YBKL/yVU=
+github.com/mdwhatcott/testing v1.4.2/go.mod h1:qw9pmVND0BqPmN/DE1BtaVzIvmQcffQAY+DOpnZ3qMo=
 github.com/mdwhatcott/tui/v2 v2.0.1 h1:c27zBR/CgrIE+0HhUrQJAf2L5Gf5pBAXM44HjgM6sf4=
 github.com/mdwhatcott/tui/v2 v2.0.1/go.mod h1:yLs1o9ypHR2qQ5FQlOrBjQOMcFyp6z4k1GLv5JMtQ30=
