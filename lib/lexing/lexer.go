@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"unicode"
 )
 
 var (
@@ -59,7 +58,7 @@ func (this *Lexer) Lex() {
 		this.err = fmt.Errorf("%w after %d bytes", ErrUnexpectedEOF, len(this.input))
 		return
 	}
-	if unicode.IsSpace(this.at(0)) { // TODO: only consider certain low/ascii space values
+	if isWhiteSpace(this.at(0)) {
 		this.err = fmt.Errorf("%w at index %d", ErrUnexpectedWhitespace, 0)
 		return
 	}
@@ -110,7 +109,7 @@ func (this *Lexer) lexZero() stateMethod {
 }
 
 func (this *Lexer) lexFraction() stateMethod {
-	if this.at(0) == '.' && unicode.IsDigit(this.at(1)) { // TODO: hmm, only consider ascii digits
+	if this.at(0) == '.' && isDigit(this.at(1)) {
 		this.pos++
 		this.emit(TokenDecimalPoint)
 		this.pos++
@@ -124,6 +123,17 @@ var (
 	_true  = []byte("true")
 	_false = []byte("false")
 )
+
+func isWhiteSpace(r rune) bool {
+	return r == ' ' // TODO: additional whitespace characters
+}
+func isDigit(r rune) bool {
+	switch r {
+	case '0' /*, '1', '2', '3', '4', '5', '6', '7', '8', '9' */ :
+		return true
+	}
+	return false
+}
 
 const (
 	_0 = '0'
