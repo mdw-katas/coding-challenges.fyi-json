@@ -56,7 +56,7 @@ func (this *Lexer) Error() error {
 func (this *Lexer) Lex() {
 	defer close(this.output)
 	if len(this.input) == 0 {
-		this.err = ErrUnexpectedEOF
+		this.err = fmt.Errorf("%w after %d bytes", ErrUnexpectedEOF, len(this.input))
 		return
 	}
 
@@ -78,10 +78,6 @@ func (this *Lexer) at(offset int) rune {
 }
 
 func lexTopLevelValue(this *Lexer) stateFn {
-	if len(this.input) == 0 {
-		this.err = fmt.Errorf("%w after %d bytes", ErrUnexpectedEOF, len(this.input))
-		return nil
-	}
 	if unicode.IsSpace(this.at(0)) { // TODO: only consider certain low/ascii space values
 		this.err = fmt.Errorf("%w at index %d", ErrUnexpectedWhitespace, 0)
 		return nil
