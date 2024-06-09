@@ -42,7 +42,6 @@ func New(input []byte) *Lexer { // TODO: accept io.Reader?
 	return &Lexer{
 		input:  input,
 		output: make(chan Token),
-		err:    ErrUnexpectedEOF,
 	}
 }
 
@@ -56,8 +55,12 @@ func (this *Lexer) Error() error {
 
 func (this *Lexer) Lex() {
 	defer close(this.output)
+	if len(this.input) == 0 {
+		this.err = ErrUnexpectedEOF
+		return
+	}
+
 	for state := lexTopLevelValue; state != nil && this.pos < len(this.input); {
-		this.err = nil
 		state = state(this)
 	}
 }
