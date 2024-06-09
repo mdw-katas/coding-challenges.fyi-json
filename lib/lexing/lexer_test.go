@@ -51,8 +51,13 @@ func (this *Suite) TestTopLevel_True() {
 func (this *Suite) TestTopLevel_False() {
 	this.assertSuccess(`false`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
 }
-func (this *Suite) SkipTestTopLevel_Number_0() {
+func (this *Suite) TestTopLevel_Number() {
 	this.assertSuccess(`0`, lexing.Token{Type: lexing.TokenZero, Value: []byte("0")})
+	this.assertSuccess(`0.0`,
+		lexing.Token{Type: lexing.TokenZero, Value: []byte("0")},
+		lexing.Token{Type: lexing.TokenDecimalPoint, Value: []byte(".")},
+		lexing.Token{Type: lexing.TokenZero, Value: []byte("0")},
+	)
 }
 
 //this.assertSuccess(`""`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})

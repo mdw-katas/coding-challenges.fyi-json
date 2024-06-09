@@ -15,11 +15,11 @@ var (
 type TokenType string
 
 const (
-	TokenWhitespace TokenType = "<whitespace>"
-	TokenNull       TokenType = "<null>"
-	TokenTrue       TokenType = "<true>"
-	TokenFalse      TokenType = "<false>"
-	TokenZero       TokenType = "<0>"
+	TokenNull         TokenType = "<null>"
+	TokenTrue         TokenType = "<true>"
+	TokenFalse        TokenType = "<false>"
+	TokenZero         TokenType = "<0>"
+	TokenDecimalPoint TokenType = "<.>"
 )
 
 type Token struct {
@@ -38,10 +38,11 @@ type Lexer struct {
 	output chan Token
 }
 
-func New(input []byte) *Lexer {
+func New(input []byte) *Lexer { // TODO: accept io.Reader?
 	return &Lexer{
 		input:  input,
 		output: make(chan Token),
+		err:    ErrUnexpectedEOF,
 	}
 }
 
@@ -55,7 +56,8 @@ func (this *Lexer) Error() error {
 
 func (this *Lexer) Lex() {
 	defer close(this.output)
-	for state := lexTopLevelValue; state != nil; {
+	for state := lexTopLevelValue; state != nil && this.pos < len(this.input); {
+		this.err = nil
 		state = state(this)
 	}
 }
@@ -68,32 +70,36 @@ func (this *Lexer) emit(tokenType TokenType) {
 	this.start = this.pos
 }
 
+func (this *Lexer) at(offset int) rune {
+	return rune(this.input[this.pos+offset])
+}
+
 func lexTopLevelValue(this *Lexer) stateFn {
 	if len(this.input) == 0 {
 		this.err = fmt.Errorf("%w after %d bytes", ErrUnexpectedEOF, len(this.input))
 		return nil
 	}
-	if unicode.IsSpace(rune(this.input[0])) {
+	if unicode.IsSpace(this.at(0)) { // TODO: only consider certain low/ascii space values
 		this.err = fmt.Errorf("%w at index %d", ErrUnexpectedWhitespace, 0)
 		return nil
 	}
-	if bytes.HasPrefix(this.input, []byte("null")) {
+	if bytes.HasPrefix(this.input, []byte("null")) { // TODO: const
 		this.pos += len("null")
 		this.emit(TokenNull)
 		return nil
 	}
-	if bytes.HasPrefix(this.input, []byte("true")) {
+	if bytes.HasPrefix(this.input, []byte("true")) { // TODO: const
 		this.pos += len("true")
 		this.emit(TokenTrue)
 		return nil
 	}
-	if bytes.HasPrefix(this.input, []byte("false")) {
+	if bytes.HasPrefix(this.input, []byte("false")) { // TODO: const
 		this.pos += len("false")
 		this.emit(TokenFalse)
 		return nil
 	}
-	if this.input[this.start] == '0' {
-		return lexZero(this)
+	if this.input[this.start] == '0' { // TODO: const
+		return lexZero
 	}
 	return nil
 }
@@ -101,9 +107,15 @@ func lexTopLevelValue(this *Lexer) stateFn {
 func lexZero(this *Lexer) stateFn {
 	this.pos++
 	this.emit(TokenZero)
-	return lexFraction(this)
+	return lexFraction
 }
 
 func lexFraction(this *Lexer) stateFn {
+	if this.at(0) == '.' && unicode.IsDigit(this.at(1)) { // TODO: hmm, only consider ascii digits
+		this.pos++
+		this.emit(TokenDecimalPoint)
+		this.pos++
+		this.emit(TokenZero)
+	}
 	return nil
 }
