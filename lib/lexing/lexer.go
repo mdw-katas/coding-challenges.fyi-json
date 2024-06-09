@@ -59,6 +59,10 @@ func (this *Lexer) Lex() {
 		this.err = fmt.Errorf("%w after %d bytes", ErrUnexpectedEOF, len(this.input))
 		return
 	}
+	if unicode.IsSpace(this.at(0)) { // TODO: only consider certain low/ascii space values
+		this.err = fmt.Errorf("%w at index %d", ErrUnexpectedWhitespace, 0)
+		return
+	}
 
 	for state := lexTopLevelValue; state != nil && this.pos < len(this.input); {
 		state = state(this)
@@ -78,10 +82,6 @@ func (this *Lexer) at(offset int) rune {
 }
 
 func lexTopLevelValue(this *Lexer) stateFn {
-	if unicode.IsSpace(this.at(0)) { // TODO: only consider certain low/ascii space values
-		this.err = fmt.Errorf("%w at index %d", ErrUnexpectedWhitespace, 0)
-		return nil
-	}
 	if bytes.HasPrefix(this.input, _null) {
 		this.pos += len(_null)
 		this.emit(TokenNull)
