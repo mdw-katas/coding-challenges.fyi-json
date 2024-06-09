@@ -47,7 +47,6 @@ func New(input []byte) *Lexer { // TODO: accept io.Reader?
 func (this *Lexer) Output() <-chan Token {
 	return this.output
 }
-
 func (this *Lexer) Error() error {
 	return this.err
 }
@@ -68,16 +67,15 @@ func (this *Lexer) Lex() {
 	}
 }
 
+func (this *Lexer) at(offset int) rune {
+	return rune(this.input[this.pos+offset])
+}
 func (this *Lexer) emit(tokenType TokenType) {
 	this.output <- Token{
 		Type:  tokenType,
 		Value: this.input[this.start:this.pos],
 	}
 	this.start = this.pos
-}
-
-func (this *Lexer) at(offset int) rune {
-	return rune(this.input[this.pos+offset])
 }
 
 func (this *Lexer) lexValue() stateMethod {
@@ -101,13 +99,11 @@ func (this *Lexer) lexValue() stateMethod {
 	}
 	return nil
 }
-
 func (this *Lexer) lexZero() stateMethod {
 	this.pos++
 	this.emit(TokenZero)
 	return this.lexFraction
 }
-
 func (this *Lexer) lexFraction() stateMethod {
 	if this.at(0) == '.' && isDigit(this.at(1)) {
 		this.pos++
@@ -117,12 +113,6 @@ func (this *Lexer) lexFraction() stateMethod {
 	}
 	return nil
 }
-
-var (
-	_null  = []byte("null")
-	_true  = []byte("true")
-	_false = []byte("false")
-)
 
 func isWhiteSpace(r rune) bool {
 	return r == ' ' // TODO: additional whitespace characters
@@ -134,6 +124,12 @@ func isDigit(r rune) bool {
 	}
 	return false
 }
+
+var (
+	_null  = []byte("null")
+	_true  = []byte("true")
+	_false = []byte("false")
+)
 
 const (
 	_0 = '0'
