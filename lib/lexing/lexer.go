@@ -64,7 +64,7 @@ func (this *Lexer) Lex() {
 		return
 	}
 
-	for state := lexTopLevelValue; state != nil && this.pos < len(this.input); {
+	for state := lexValue; state != nil && this.pos < len(this.input); {
 		state = state(this)
 	}
 }
@@ -81,7 +81,7 @@ func (this *Lexer) at(offset int) rune {
 	return rune(this.input[this.pos+offset])
 }
 
-func lexTopLevelValue(this *Lexer) stateFn {
+func lexValue(this *Lexer) stateFn {
 	if bytes.HasPrefix(this.input, _null) {
 		this.pos += len(_null)
 		this.emit(TokenNull)
