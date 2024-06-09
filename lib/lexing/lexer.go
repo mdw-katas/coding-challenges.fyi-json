@@ -83,22 +83,22 @@ func lexTopLevelValue(this *Lexer) stateFn {
 		this.err = fmt.Errorf("%w at index %d", ErrUnexpectedWhitespace, 0)
 		return nil
 	}
-	if bytes.HasPrefix(this.input, []byte("null")) { // TODO: const
-		this.pos += len("null")
+	if bytes.HasPrefix(this.input, _null) { // TODO: const
+		this.pos += len(_null)
 		this.emit(TokenNull)
 		return nil
 	}
-	if bytes.HasPrefix(this.input, []byte("true")) { // TODO: const
-		this.pos += len("true")
+	if bytes.HasPrefix(this.input, _true) { // TODO: const
+		this.pos += len(_true)
 		this.emit(TokenTrue)
 		return nil
 	}
-	if bytes.HasPrefix(this.input, []byte("false")) { // TODO: const
-		this.pos += len("false")
+	if bytes.HasPrefix(this.input, _false) { // TODO: const
+		this.pos += len(_false)
 		this.emit(TokenFalse)
 		return nil
 	}
-	if this.input[this.start] == '0' { // TODO: const
+	if this.input[this.start] == _0 { // TODO: const
 		return lexZero
 	}
 	return nil
@@ -119,3 +119,13 @@ func lexFraction(this *Lexer) stateFn {
 	}
 	return nil
 }
+
+var (
+	_null  = []byte("null")
+	_true  = []byte("true")
+	_false = []byte("false")
+)
+
+const (
+	_0 = '0'
+)
