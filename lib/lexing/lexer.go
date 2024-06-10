@@ -1,15 +1,6 @@
 package lexing
 
-import (
-	"bytes"
-	"errors"
-	"fmt"
-)
-
-var (
-	ErrUnexpectedEOF        = errors.New("unexpected EOF")
-	ErrUnexpectedWhitespace = errors.New("unexpected whitespace")
-)
+import "bytes"
 
 type TokenType string
 
@@ -42,7 +33,6 @@ type Lexer struct {
 	start  int // start position of this item.
 	pos    int // current position in the input.
 	width  int // width of last rune read from input.
-	err    error
 	output chan Token
 }
 
@@ -56,18 +46,13 @@ func New(input []byte) *Lexer { // TODO: accept io.Reader?
 func (this *Lexer) Output() <-chan Token {
 	return this.output
 }
-func (this *Lexer) Error() error {
-	return this.err
-}
 
 func (this *Lexer) Lex() {
 	defer close(this.output)
 	if len(this.input) == 0 {
-		this.err = fmt.Errorf("%w after %d bytes", ErrUnexpectedEOF, len(this.input))
 		return
 	}
 	if isWhiteSpace(this.at(0)) {
-		this.err = fmt.Errorf("%w at index %d", ErrUnexpectedWhitespace, 0)
 		return
 	}
 

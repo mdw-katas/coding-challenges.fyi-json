@@ -15,7 +15,7 @@ type Suite struct {
 	*should.T
 }
 
-func (this *Suite) lex(s string) ([]lexing.Token, error) {
+func (this *Suite) lex(s string) []lexing.Token {
 	lexer := lexing.New([]byte(s))
 	go func() {
 		defer func() { recover() }()
@@ -26,38 +26,32 @@ func (this *Suite) lex(s string) ([]lexing.Token, error) {
 	for token := range output {
 		result = append(result, token)
 	}
-	return result, lexer.Error()
+	return result
 }
-func (this *Suite) assertSuccess(input string, expected ...lexing.Token) {
-	tokens, err := this.lex(input)
-	this.So(err, should.BeNil)
+func (this *Suite) assertLexed(input string, expected ...lexing.Token) {
+	tokens := this.lex(input)
 	this.So(tokens, should.Equal, expected)
-}
-func (this *Suite) assertFailure(input string, expected error) {
-	tokens, err := this.lex(input)
-	this.So(tokens, should.BeNil)
-	this.So(err, should.WrapError, expected)
 }
 
 func (this *Suite) TestTopLevel_Blank() {
-	this.assertFailure("", lexing.ErrUnexpectedEOF)
+	this.assertLexed("", []lexing.Token(nil)...)
 }
 func (this *Suite) TestTopLevel_JustWhitespace() {
-	this.assertFailure(" ", lexing.ErrUnexpectedWhitespace)
+	this.assertLexed(" ", []lexing.Token(nil)...)
 }
 func (this *Suite) TestTopLevel_Null() {
-	this.assertSuccess(`null`, lexing.Token{Type: lexing.TokenNull, Value: []byte("null")})
+	this.assertLexed(`null`, lexing.Token{Type: lexing.TokenNull, Value: []byte("null")})
 }
 func (this *Suite) TestTopLevel_True() {
-	this.assertSuccess(`true`, lexing.Token{Type: lexing.TokenTrue, Value: []byte("true")})
+	this.assertLexed(`true`, lexing.Token{Type: lexing.TokenTrue, Value: []byte("true")})
 }
 func (this *Suite) TestTopLevel_False() {
-	this.assertSuccess(`false`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
+	this.assertLexed(`false`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
 }
 func (this *Suite) TestTopLevel_Number() {
-	this.assertSuccess(`0`, lexing.Token{Type: lexing.TokenZero, Value: []byte("0")})
-	this.assertSuccess(`1`, lexing.Token{Type: lexing.TokenOne, Value: []byte("1")})
-	this.assertSuccess(`1234567890`,
+	this.assertLexed(`0`, lexing.Token{Type: lexing.TokenZero, Value: []byte("0")})
+	this.assertLexed(`1`, lexing.Token{Type: lexing.TokenOne, Value: []byte("1")})
+	this.assertLexed(`1234567890`,
 		lexing.Token{Type: lexing.TokenOne, Value: []byte("1")},
 		lexing.Token{Type: lexing.TokenTwo, Value: []byte("2")},
 		lexing.Token{Type: lexing.TokenThree, Value: []byte("3")},
@@ -69,12 +63,12 @@ func (this *Suite) TestTopLevel_Number() {
 		lexing.Token{Type: lexing.TokenNine, Value: []byte("9")},
 		lexing.Token{Type: lexing.TokenZero, Value: []byte("0")},
 	)
-	this.assertSuccess(`0.0`,
+	this.assertLexed(`0.0`,
 		lexing.Token{Type: lexing.TokenZero, Value: []byte("0")},
 		lexing.Token{Type: lexing.TokenDecimalPoint, Value: []byte(".")},
 		lexing.Token{Type: lexing.TokenZero, Value: []byte("0")},
 	)
-	this.assertSuccess(`0.0123456789`,
+	this.assertLexed(`0.0123456789`,
 		lexing.Token{Type: lexing.TokenZero, Value: []byte("0")},
 		lexing.Token{Type: lexing.TokenDecimalPoint, Value: []byte(".")},
 		lexing.Token{Type: lexing.TokenZero, Value: []byte("0")},
@@ -88,7 +82,7 @@ func (this *Suite) TestTopLevel_Number() {
 		lexing.Token{Type: lexing.TokenEight, Value: []byte("8")},
 		lexing.Token{Type: lexing.TokenNine, Value: []byte("9")},
 	)
-	this.assertSuccess(`1234567890.0123456789`,
+	this.assertLexed(`1234567890.0123456789`,
 		lexing.Token{Type: lexing.TokenOne, Value: []byte("1")},
 		lexing.Token{Type: lexing.TokenTwo, Value: []byte("2")},
 		lexing.Token{Type: lexing.TokenThree, Value: []byte("3")},
@@ -113,6 +107,6 @@ func (this *Suite) TestTopLevel_Number() {
 	)
 }
 
-//this.assertSuccess(`""`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
-//this.assertSuccess(`[]`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
-//this.assertSuccess(`{}`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
+//this.assertLexed(`""`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
+//this.assertLexed(`[]`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
+//this.assertLexed(`{}`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
