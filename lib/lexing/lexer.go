@@ -100,7 +100,7 @@ func (this *Lexer) lexNumberFromZero() stateMethod {
 }
 func (this *Lexer) lexNumberFromNonZero() stateMethod {
 	this.pos++
-	this.emit(digitTokens[this.input[this.start]])
+	this.emit(digitToken(rune(this.input[this.start])))
 	this.emitDigits()
 	return this.lexFraction
 }
@@ -115,7 +115,7 @@ func (this *Lexer) lexFraction() stateMethod {
 func (this *Lexer) emitDigits() {
 	for isDigit(this.at(0)) {
 		this.pos++
-		this.emit(digitTokens[this.input[this.start]])
+		this.emit(digitToken(rune(this.input[this.start])))
 	}
 }
 
@@ -123,24 +123,34 @@ func isWhiteSpace(r rune) bool {
 	return r == ' ' // TODO: additional whitespace characters
 }
 func isDigit(r rune) bool {
-	switch r {
-	case _0, _1, _2, _3, _4, _5, _6, _7, _8, _9:
-		return true
-	}
-	return false
+	return digitToken(r) != ""
 }
 
-var digitTokens = map[byte]TokenType{
-	_0: TokenZero,
-	_1: TokenOne,
-	_2: TokenTwo,
-	_3: TokenThree,
-	_4: TokenFour,
-	_5: TokenFive,
-	_6: TokenSix,
-	_7: TokenSeven,
-	_8: TokenEight,
-	_9: TokenNine,
+func digitToken(r rune) TokenType {
+	switch r {
+	case _0:
+		return TokenZero
+	case _1:
+		return TokenOne
+	case _2:
+		return TokenTwo
+	case _3:
+		return TokenThree
+	case _4:
+		return TokenFour
+	case _5:
+		return TokenFive
+	case _6:
+		return TokenSix
+	case _7:
+		return TokenSeven
+	case _8:
+		return TokenEight
+	case _9:
+		return TokenNine
+	default:
+		return ""
+	}
 }
 
 var (
