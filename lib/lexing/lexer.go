@@ -124,23 +124,23 @@ func isWhiteSpace(r rune) bool {
 }
 func isDigit(r rune) bool {
 	switch r {
-	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+	case _0, _1, _2, _3, _4, _5, _6, _7, _8, _9:
 		return true
 	}
 	return false
 }
 
 var digitTokens = map[byte]TokenType{
-	'0': TokenZero,
-	'1': TokenOne,
-	'2': TokenTwo,
-	'3': TokenThree,
-	'4': TokenFour,
-	'5': TokenFive,
-	'6': TokenSix,
-	'7': TokenSeven,
-	'8': TokenEight,
-	'9': TokenNine,
+	_0: TokenZero,
+	_1: TokenOne,
+	_2: TokenTwo,
+	_3: TokenThree,
+	_4: TokenFour,
+	_5: TokenFive,
+	_6: TokenSix,
+	_7: TokenSeven,
+	_8: TokenEight,
+	_9: TokenNine,
 }
 
 var (
@@ -151,4 +151,13 @@ var (
 
 const (
 	_0 = '0'
+	_1 = '1'
+	_2 = '2'
+	_3 = '3'
+	_4 = '4'
+	_5 = '5'
+	_6 = '6'
+	_7 = '7'
+	_8 = '8'
+	_9 = '9'
 )
