@@ -8,6 +8,7 @@ const (
 	TokenNull         TokenType = "<null>"
 	TokenTrue         TokenType = "<true>"
 	TokenFalse        TokenType = "<false>"
+	TokenNegativeSign TokenType = "<->"
 	TokenDecimalPoint TokenType = "<.>"
 	TokenZero         TokenType = "<0>"
 	TokenOne          TokenType = "<1>"
@@ -78,19 +79,26 @@ func (this *Lexer) lexValue() stateMethod {
 	} else if bytes.HasPrefix(this.input, _false) {
 		this.pos += len(_false)
 		this.emit(TokenFalse)
+	} else if this.at(0) == negativeSign {
+		return this.lexNumberFromNegativeSign
 	} else if this.at(0) == _0 {
 		return this.lexNumberFromZero
 	} else if isDigit(this.at(0)) {
-		return this.lexNumberFromNonZero
+		return this.lexNumberFromDigit
 	}
 	return nil
+}
+func (this *Lexer) lexNumberFromNegativeSign() stateMethod {
+	this.pos++
+	this.emit(TokenNegativeSign)
+	return this.lexNumberFromDigit
 }
 func (this *Lexer) lexNumberFromZero() stateMethod {
 	this.pos++
 	this.emit(TokenZero)
 	return this.lexFraction
 }
-func (this *Lexer) lexNumberFromNonZero() stateMethod {
+func (this *Lexer) lexNumberFromDigit() stateMethod {
 	this.pos++
 	this.emit(digitToken(rune(this.input[this.start])))
 	this.emitDigits()
@@ -152,6 +160,8 @@ var (
 )
 
 const (
+	negativeSign = '-'
+
 	_0 = '0'
 	_1 = '1'
 	_2 = '2'

@@ -99,6 +99,18 @@ func (this *Suite) TestTopLevel_Number() {
 		lexing.Token{Type: lexing.TokenEight, Value: []byte("8")},
 		lexing.Token{Type: lexing.TokenNine, Value: []byte("9")},
 	)
+	this.assertLexed(`-1`, token(lexing.TokenNegativeSign, "-"), token(lexing.TokenOne, "1"))
+	this.assertLexed(`-0`, token(lexing.TokenNegativeSign, "-"), token(lexing.TokenZero, "0"))
+	this.assertLexed(`-0.1`,
+		token(lexing.TokenNegativeSign, "-"),
+		token(lexing.TokenZero, "0"),
+		token(lexing.TokenDecimalPoint, "."),
+		token(lexing.TokenOne, "1"),
+	)
+}
+
+func token(tokenType lexing.TokenType, value string) lexing.Token {
+	return lexing.Token{Type: tokenType, Value: []byte(value)}
 }
 
 //this.assertLexed(`""`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
