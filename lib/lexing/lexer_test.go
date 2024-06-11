@@ -98,8 +98,14 @@ func (this *Suite) TestTopLevel_Number() {
 		token(TokenEight, "8"),
 		token(TokenNine, "9"),
 	)
-	this.assertLexed(`-1`, token(TokenNegativeSign, "-"), token(TokenOne, "1"))
-	this.assertLexed(`-0`, token(TokenNegativeSign, "-"), token(TokenZero, "0"))
+	this.assertLexed(`-1`,
+		token(TokenNegativeSign, "-"),
+		token(TokenOne, "1"),
+	)
+	this.assertLexed(`-0`,
+		token(TokenNegativeSign, "-"),
+		token(TokenZero, "0"),
+	)
 	this.assertLexed(`-0.1`,
 		token(TokenNegativeSign, "-"),
 		token(TokenZero, "0"),
