@@ -55,7 +55,6 @@ func (this *Lexer) Lex() {
 	if isWhiteSpace(this.at(0)) {
 		return
 	}
-
 	for state := this.lexValue; state != nil && this.pos < len(this.input); {
 		state = state()
 	}

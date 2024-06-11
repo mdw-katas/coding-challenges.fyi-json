@@ -21,9 +21,8 @@ func (this *Suite) lex(s string) []lexing.Token {
 		defer func() { recover() }()
 		lexer.Lex()
 	}()
-	output := lexer.Output()
 	var result []lexing.Token
-	for token := range output {
+	for token := range lexer.Output() {
 		result = append(result, token)
 	}
 	return result
