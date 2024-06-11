@@ -1,123 +1,48 @@
 package lexing
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/mdwhatcott/testing/should"
 )
 
-func TestSuite(t *testing.T) {
-	should.Run(&Suite{T: should.New(t)}, should.Options.UnitTests())
-}
+func TestLex(t *testing.T) {
+	testLex(t, "")
+	testLex(t, " ")
+	testLex(t, `null`, token(TokenNull, "null"))
+	testLex(t, `true`, token(TokenTrue, "true"))
+	testLex(t, `false`, token(TokenFalse, "false"))
+	testLex(t, `null--trailing-bad-stuff-will-be-identified-by-parser`, token(TokenNull, "null"))
+	testLex(t, `0`, token(TokenNumber, "0"))
+	testLex(t, `1`, token(TokenNumber, "1"))
+	testLex(t, `1234567890`, token(TokenNumber, "1234567890"))
+	testLex(t, `0.NaN`, token(TokenIllegal, "0."))
+	testLex(t, `0.0`, token(TokenNumber, "0.0"))
+	testLex(t, `0.0123456789`, token(TokenNumber, "0.0123456789"))
+	testLex(t, `1234567890.0123456789`, token(TokenNumber, "1234567890.0123456789"))
+	testLex(t, `-1`, token(TokenNumber, "-1"))
+	testLex(t, `-0`, token(TokenNumber, "-0"))
+	testLex(t, `-0.1`, token(TokenNumber, "-0.1"))
+	testLex(t, `3.7e-5`, token(TokenNumber, "3.7e-5"))
+	testLex(t, `3.7e+5`, token(TokenNumber, "3.7e+5"))
 
-type Suite struct {
-	*should.T
 }
-
-func (this *Suite) lex(s string) []Token {
-	lexer := New([]byte(s))
-	go func() {
-		defer func() { recover() }()
-		lexer.Lex()
-	}()
-	var result []Token
-	for token := range lexer.Output() {
+func lex(s string) (result []Token) {
+	defer func() { recover() }()
+	for token := range Lex([]byte(s)) {
 		result = append(result, token)
 	}
 	return result
 }
-func (this *Suite) assertLexed(input string, expected ...Token) {
-	this.So(this.lex(input), should.Equal, expected)
+func testLex(t *testing.T, input string, expected ...Token) {
+	t.Run(input, func(t *testing.T) {
+		should.So(t, lex(input), should.Equal, expected)
+	})
 }
-
-func (this *Suite) TestTopLevelValues() {
-	this.assertLexed("")
-	this.assertLexed(" ")
-	this.assertLexed(`null`, token(TokenNull, "null"))
-	this.assertLexed(`true`, token(TokenTrue, "true"))
-	this.assertLexed(`false`, token(TokenFalse, "false"))
-	this.assertLexed(`null--trailing-bad-stuff-will-be-identified-by-parser`,
-		token(TokenNull, "null"),
-	)
-}
-func (this *Suite) TestTopLevel_Number() {
-	this.assertLexed(`0`, token(TokenZero, "0"))
-	this.assertLexed(`1`, token(TokenOne, "1"))
-	this.assertLexed(`1234567890`,
-		token(TokenOne, "1"),
-		token(TokenTwo, "2"),
-		token(TokenThree, "3"),
-		token(TokenFour, "4"),
-		token(TokenFive, "5"),
-		token(TokenSix, "6"),
-		token(TokenSeven, "7"),
-		token(TokenEight, "8"),
-		token(TokenNine, "9"),
-		token(TokenZero, "0"),
-	)
-	this.assertLexed(`0.NaN`, token(TokenZero, "0"))
-	this.assertLexed(`0.0`,
-		token(TokenZero, "0"),
-		token(TokenDecimalPoint, "."),
-		token(TokenZero, "0"),
-	)
-	this.assertLexed(`0.0123456789`,
-		token(TokenZero, "0"),
-		token(TokenDecimalPoint, "."),
-		token(TokenZero, "0"),
-		token(TokenOne, "1"),
-		token(TokenTwo, "2"),
-		token(TokenThree, "3"),
-		token(TokenFour, "4"),
-		token(TokenFive, "5"),
-		token(TokenSix, "6"),
-		token(TokenSeven, "7"),
-		token(TokenEight, "8"),
-		token(TokenNine, "9"),
-	)
-	this.assertLexed(`1234567890.0123456789`,
-		token(TokenOne, "1"),
-		token(TokenTwo, "2"),
-		token(TokenThree, "3"),
-		token(TokenFour, "4"),
-		token(TokenFive, "5"),
-		token(TokenSix, "6"),
-		token(TokenSeven, "7"),
-		token(TokenEight, "8"),
-		token(TokenNine, "9"),
-		token(TokenZero, "0"),
-		token(TokenDecimalPoint, "."),
-		token(TokenZero, "0"),
-		token(TokenOne, "1"),
-		token(TokenTwo, "2"),
-		token(TokenThree, "3"),
-		token(TokenFour, "4"),
-		token(TokenFive, "5"),
-		token(TokenSix, "6"),
-		token(TokenSeven, "7"),
-		token(TokenEight, "8"),
-		token(TokenNine, "9"),
-	)
-	this.assertLexed(`-1`,
-		token(TokenNegativeSign, "-"),
-		token(TokenOne, "1"),
-	)
-	this.assertLexed(`-0`,
-		token(TokenNegativeSign, "-"),
-		token(TokenZero, "0"),
-	)
-	this.assertLexed(`-0.1`,
-		token(TokenNegativeSign, "-"),
-		token(TokenZero, "0"),
-		token(TokenDecimalPoint, "."),
-		token(TokenOne, "1"),
-	)
-}
-
 func token(tokenType TokenType, value string) Token {
 	return Token{Type: tokenType, Value: []byte(value)}
 }
-
-//this.assertLexed(`""`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
-//this.assertLexed(`[]`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
-//this.assertLexed(`{}`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
+func (this Token) GoString() string {
+	return fmt.Sprintf(`lexing.Token{Type:"%s", Value: []byte("%s")}`, this.Type, this.Value)
+}
