@@ -1,14 +1,2 @@
-github.com/mdwhatcott/exec v1.2.0 h1:l7Cpk44cmk9M+x5e/RR4AjZpPOuMHm8pQkJQe1NkEdk=
-github.com/mdwhatcott/exec v1.2.0/go.mod h1:AbVwQivocJEdGMuBkafu/n8AZ3t26iEyCLFsxXj4lgQ=
-github.com/mdwhatcott/funcy v1.9.0 h1:lQJQGLR/rMLwWcvxiV5DCIvbrTI25CN9h1o/3n3Gwjc=
-github.com/mdwhatcott/funcy v1.9.0/go.mod h1:hry3gV/UZ7hDs9QaoV4k27e6w/uHWMiALhxvHQyqphg=
-github.com/mdwhatcott/go-set/v2 v2.0.1 h1:KEPe5jrZZhJd7Al6ZyENFfXKz34S21tjoubMN9kfMpg=
-github.com/mdwhatcott/go-set/v2 v2.0.1/go.mod h1:gnLMxayqGJiKQ9uZoqoZLvHuvxgmcnCF1ldKrWSlOgU=
-github.com/mdwhatcott/must v1.2.0 h1:X+Ay0ZIp2pMFT0HpFwxg8sCvZOAeyRPb+yQ477DWhbs=
-github.com/mdwhatcott/must v1.2.0/go.mod h1:3rldN1MW4me3st97YNJxDm3L+zo5R5kKoh7Km75kWnY=
-github.com/mdwhatcott/slogging v1.0.0 h1:obpPne/9MV0tjHV1X7l2vepmWLd4HKa341yqOOa1jOo=
-github.com/mdwhatcott/slogging v1.0.0/go.mod h1:3q7t9MfCAxBp/XRsGRj6q4S2vyFUFalMIEOv0sQCKTQ=
 github.com/mdwhatcott/testing v1.4.2 h1:xE9uI+0TiQTYKY45+W0t2XO89wgj4YANjd3YBKL/yVU=
 github.com/mdwhatcott/testing v1.4.2/go.mod h1:qw9pmVND0BqPmN/DE1BtaVzIvmQcffQAY+DOpnZ3qMo=
-github.com/mdwhatcott/tui/v2 v2.0.1 h1:c27zBR/CgrIE+0HhUrQJAf2L5Gf5pBAXM44HjgM6sf4=
-github.com/mdwhatcott/tui/v2 v2.0.1/go.mod h1:yLs1o9ypHR2qQ5FQlOrBjQOMcFyp6z4k1GLv5JMtQ30=
