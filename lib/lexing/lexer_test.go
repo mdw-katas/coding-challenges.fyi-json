@@ -28,24 +28,18 @@ func (this *Suite) lex(s string) []lexing.Token {
 	return result
 }
 func (this *Suite) assertLexed(input string, expected ...lexing.Token) {
-	tokens := this.lex(input)
-	this.So(tokens, should.Equal, expected)
+	this.So(this.lex(input), should.Equal, expected)
 }
 
-func (this *Suite) TestTopLevel_Blank() {
-	this.assertLexed("", []lexing.Token(nil)...)
-}
-func (this *Suite) TestTopLevel_JustWhitespace() {
-	this.assertLexed(" ", []lexing.Token(nil)...)
-}
-func (this *Suite) TestTopLevel_Null() {
+func (this *Suite) TestTopLevelValues() {
+	this.assertLexed("")
+	this.assertLexed(" ")
 	this.assertLexed(`null`, lexing.Token{Type: lexing.TokenNull, Value: []byte("null")})
-}
-func (this *Suite) TestTopLevel_True() {
 	this.assertLexed(`true`, lexing.Token{Type: lexing.TokenTrue, Value: []byte("true")})
-}
-func (this *Suite) TestTopLevel_False() {
 	this.assertLexed(`false`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
+	this.assertLexed(`null--trailing-bad-stuff-will-be-identified-by-parser`,
+		lexing.Token{Type: lexing.TokenNull, Value: []byte("null")},
+	)
 }
 func (this *Suite) TestTopLevel_Number() {
 	this.assertLexed(`0`, lexing.Token{Type: lexing.TokenZero, Value: []byte("0")})
@@ -62,6 +56,7 @@ func (this *Suite) TestTopLevel_Number() {
 		lexing.Token{Type: lexing.TokenNine, Value: []byte("9")},
 		lexing.Token{Type: lexing.TokenZero, Value: []byte("0")},
 	)
+	this.assertLexed(`0.NaN`, lexing.Token{Type: lexing.TokenZero, Value: []byte("0")})
 	this.assertLexed(`0.0`,
 		lexing.Token{Type: lexing.TokenZero, Value: []byte("0")},
 		lexing.Token{Type: lexing.TokenDecimalPoint, Value: []byte(".")},

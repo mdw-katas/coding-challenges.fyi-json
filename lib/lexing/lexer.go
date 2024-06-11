@@ -72,22 +72,15 @@ func (this *Lexer) lexValue() stateMethod {
 	if bytes.HasPrefix(this.input, _null) {
 		this.pos += len(_null)
 		this.emit(TokenNull)
-		return nil
-	}
-	if bytes.HasPrefix(this.input, _true) {
+	} else if bytes.HasPrefix(this.input, _true) {
 		this.pos += len(_true)
 		this.emit(TokenTrue)
-		return nil
-	}
-	if bytes.HasPrefix(this.input, _false) {
+	} else if bytes.HasPrefix(this.input, _false) {
 		this.pos += len(_false)
 		this.emit(TokenFalse)
-		return nil
-	}
-	if this.at(0) == _0 {
+	} else if this.at(0) == _0 {
 		return this.lexNumberFromZero
-	}
-	if isDigit(this.at(0)) {
+	} else if isDigit(this.at(0)) {
 		return this.lexNumberFromNonZero
 	}
 	return nil
