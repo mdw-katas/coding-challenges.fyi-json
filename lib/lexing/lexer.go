@@ -42,6 +42,9 @@ func (this *Lexer) lex() {
 	for state := this.lexValue; state != nil && this.pos < len(this.input); {
 		state = state()
 	}
+	if this.pos < len(this.input) {
+		this.emit(TokenIllegal)
+	}
 }
 
 func (this *Lexer) peek() rune {
@@ -86,6 +89,9 @@ func (this *Lexer) acceptSequence(sequence []rune) bool {
 	return true
 }
 func (this *Lexer) emit(tokenType TokenType) {
+	if tokenType == TokenIllegal {
+		this.pos = len(this.input)
+	}
 	this.output <- Token{Type: tokenType, Value: this.input[this.start:this.pos]}
 	this.start = this.pos
 }
