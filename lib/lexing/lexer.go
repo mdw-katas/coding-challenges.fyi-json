@@ -22,7 +22,7 @@ type stateMethod func() stateMethod
 type Lexer struct {
 	input  []byte
 	start  int
-	pos    int
+	stop   int
 	output chan Token
 }
 
@@ -39,10 +39,10 @@ func (this *Lexer) lex() {
 	if isWhiteSpace(this.peek()) {
 		return
 	}
-	for state := this.lexValue; state != nil && this.pos < len(this.input); {
+	for state := this.lexValue; state != nil && this.stop < len(this.input); {
 		state = state()
 	}
-	if this.pos < len(this.input) {
+	if this.stop < len(this.input) {
 		this.emit(TokenIllegal)
 	}
 }
@@ -51,16 +51,16 @@ func (this *Lexer) peek() rune {
 	return this.at(0)
 }
 func (this *Lexer) at(offset int) rune {
-	if this.pos >= len(this.input) {
+	if this.stop >= len(this.input) {
 		return 0
 	}
-	return rune(this.input[this.pos+offset])
+	return rune(this.input[this.stop+offset])
 }
 func (this *Lexer) from(offset int) rune {
 	return rune(this.input[this.start+offset])
 }
 func (this *Lexer) stepN(n int) {
-	this.pos += n
+	this.stop += n
 }
 func (this *Lexer) step() {
 	this.stepN(1)
@@ -90,10 +90,10 @@ func (this *Lexer) acceptSequence(sequence []rune) bool {
 }
 func (this *Lexer) emit(tokenType TokenType) {
 	if tokenType == TokenIllegal {
-		this.pos = len(this.input)
+		this.stop = len(this.input)
 	}
-	this.output <- Token{Type: tokenType, Value: this.input[this.start:this.pos]}
-	this.start = this.pos
+	this.output <- Token{Type: tokenType, Value: this.input[this.start:this.stop]}
+	this.start = this.stop
 }
 
 func (this *Lexer) lexValue() stateMethod {
@@ -115,7 +115,7 @@ func (this *Lexer) lexValue() stateMethod {
 func (this *Lexer) acceptNumber() bool {
 	this.accept(sign...)
 	if !isDigit(this.peek()) {
-		this.pos = this.start
+		this.stop = this.start
 		return false
 	}
 	if !this.accept(zero) {
