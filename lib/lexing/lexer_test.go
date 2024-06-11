@@ -1,9 +1,8 @@
-package lexing_test
+package lexing
 
 import (
 	"testing"
 
-	"github.com/mdwhatcott/coding-challenges.fyi-json/lib/lexing"
 	"github.com/mdwhatcott/testing/should"
 )
 
@@ -15,102 +14,102 @@ type Suite struct {
 	*should.T
 }
 
-func (this *Suite) lex(s string) []lexing.Token {
-	lexer := lexing.New([]byte(s))
+func (this *Suite) lex(s string) []Token {
+	lexer := New([]byte(s))
 	go func() {
 		defer func() { recover() }()
 		lexer.Lex()
 	}()
-	var result []lexing.Token
+	var result []Token
 	for token := range lexer.Output() {
 		result = append(result, token)
 	}
 	return result
 }
-func (this *Suite) assertLexed(input string, expected ...lexing.Token) {
+func (this *Suite) assertLexed(input string, expected ...Token) {
 	this.So(this.lex(input), should.Equal, expected)
 }
 
 func (this *Suite) TestTopLevelValues() {
 	this.assertLexed("")
 	this.assertLexed(" ")
-	this.assertLexed(`null`, token(lexing.TokenNull, "null"))
-	this.assertLexed(`true`, token(lexing.TokenTrue, "true"))
-	this.assertLexed(`false`, token(lexing.TokenFalse, "false"))
+	this.assertLexed(`null`, token(TokenNull, "null"))
+	this.assertLexed(`true`, token(TokenTrue, "true"))
+	this.assertLexed(`false`, token(TokenFalse, "false"))
 	this.assertLexed(`null--trailing-bad-stuff-will-be-identified-by-parser`,
-		token(lexing.TokenNull, "null"),
+		token(TokenNull, "null"),
 	)
 }
 func (this *Suite) TestTopLevel_Number() {
-	this.assertLexed(`0`, token(lexing.TokenZero, "0"))
-	this.assertLexed(`1`, token(lexing.TokenOne, "1"))
+	this.assertLexed(`0`, token(TokenZero, "0"))
+	this.assertLexed(`1`, token(TokenOne, "1"))
 	this.assertLexed(`1234567890`,
-		token(lexing.TokenOne, "1"),
-		token(lexing.TokenTwo, "2"),
-		token(lexing.TokenThree, "3"),
-		token(lexing.TokenFour, "4"),
-		token(lexing.TokenFive, "5"),
-		token(lexing.TokenSix, "6"),
-		token(lexing.TokenSeven, "7"),
-		token(lexing.TokenEight, "8"),
-		token(lexing.TokenNine, "9"),
-		token(lexing.TokenZero, "0"),
+		token(TokenOne, "1"),
+		token(TokenTwo, "2"),
+		token(TokenThree, "3"),
+		token(TokenFour, "4"),
+		token(TokenFive, "5"),
+		token(TokenSix, "6"),
+		token(TokenSeven, "7"),
+		token(TokenEight, "8"),
+		token(TokenNine, "9"),
+		token(TokenZero, "0"),
 	)
-	this.assertLexed(`0.NaN`, token(lexing.TokenZero, "0"))
+	this.assertLexed(`0.NaN`, token(TokenZero, "0"))
 	this.assertLexed(`0.0`,
-		token(lexing.TokenZero, "0"),
-		token(lexing.TokenDecimalPoint, "."),
-		token(lexing.TokenZero, "0"),
+		token(TokenZero, "0"),
+		token(TokenDecimalPoint, "."),
+		token(TokenZero, "0"),
 	)
 	this.assertLexed(`0.0123456789`,
-		token(lexing.TokenZero, "0"),
-		token(lexing.TokenDecimalPoint, "."),
-		token(lexing.TokenZero, "0"),
-		token(lexing.TokenOne, "1"),
-		token(lexing.TokenTwo, "2"),
-		token(lexing.TokenThree, "3"),
-		token(lexing.TokenFour, "4"),
-		token(lexing.TokenFive, "5"),
-		token(lexing.TokenSix, "6"),
-		token(lexing.TokenSeven, "7"),
-		token(lexing.TokenEight, "8"),
-		token(lexing.TokenNine, "9"),
+		token(TokenZero, "0"),
+		token(TokenDecimalPoint, "."),
+		token(TokenZero, "0"),
+		token(TokenOne, "1"),
+		token(TokenTwo, "2"),
+		token(TokenThree, "3"),
+		token(TokenFour, "4"),
+		token(TokenFive, "5"),
+		token(TokenSix, "6"),
+		token(TokenSeven, "7"),
+		token(TokenEight, "8"),
+		token(TokenNine, "9"),
 	)
 	this.assertLexed(`1234567890.0123456789`,
-		token(lexing.TokenOne, "1"),
-		token(lexing.TokenTwo, "2"),
-		token(lexing.TokenThree, "3"),
-		token(lexing.TokenFour, "4"),
-		token(lexing.TokenFive, "5"),
-		token(lexing.TokenSix, "6"),
-		token(lexing.TokenSeven, "7"),
-		token(lexing.TokenEight, "8"),
-		token(lexing.TokenNine, "9"),
-		token(lexing.TokenZero, "0"),
-		token(lexing.TokenDecimalPoint, "."),
-		token(lexing.TokenZero, "0"),
-		token(lexing.TokenOne, "1"),
-		token(lexing.TokenTwo, "2"),
-		token(lexing.TokenThree, "3"),
-		token(lexing.TokenFour, "4"),
-		token(lexing.TokenFive, "5"),
-		token(lexing.TokenSix, "6"),
-		token(lexing.TokenSeven, "7"),
-		token(lexing.TokenEight, "8"),
-		token(lexing.TokenNine, "9"),
+		token(TokenOne, "1"),
+		token(TokenTwo, "2"),
+		token(TokenThree, "3"),
+		token(TokenFour, "4"),
+		token(TokenFive, "5"),
+		token(TokenSix, "6"),
+		token(TokenSeven, "7"),
+		token(TokenEight, "8"),
+		token(TokenNine, "9"),
+		token(TokenZero, "0"),
+		token(TokenDecimalPoint, "."),
+		token(TokenZero, "0"),
+		token(TokenOne, "1"),
+		token(TokenTwo, "2"),
+		token(TokenThree, "3"),
+		token(TokenFour, "4"),
+		token(TokenFive, "5"),
+		token(TokenSix, "6"),
+		token(TokenSeven, "7"),
+		token(TokenEight, "8"),
+		token(TokenNine, "9"),
 	)
-	this.assertLexed(`-1`, token(lexing.TokenNegativeSign, "-"), token(lexing.TokenOne, "1"))
-	this.assertLexed(`-0`, token(lexing.TokenNegativeSign, "-"), token(lexing.TokenZero, "0"))
+	this.assertLexed(`-1`, token(TokenNegativeSign, "-"), token(TokenOne, "1"))
+	this.assertLexed(`-0`, token(TokenNegativeSign, "-"), token(TokenZero, "0"))
 	this.assertLexed(`-0.1`,
-		token(lexing.TokenNegativeSign, "-"),
-		token(lexing.TokenZero, "0"),
-		token(lexing.TokenDecimalPoint, "."),
-		token(lexing.TokenOne, "1"),
+		token(TokenNegativeSign, "-"),
+		token(TokenZero, "0"),
+		token(TokenDecimalPoint, "."),
+		token(TokenOne, "1"),
 	)
 }
 
-func token(tokenType lexing.TokenType, value string) lexing.Token {
-	return lexing.Token{Type: tokenType, Value: []byte(value)}
+func token(tokenType TokenType, value string) Token {
+	return Token{Type: tokenType, Value: []byte(value)}
 }
 
 //this.assertLexed(`""`, lexing.Token{Type: lexing.TokenFalse, Value: []byte("false")})
