@@ -25,7 +25,7 @@ type Token struct {
 	Value []byte
 }
 
-type Lexer struct {
+type lexer struct {
 	input  []byte
 	start  int
 	stop   int
@@ -33,11 +33,11 @@ type Lexer struct {
 }
 
 func Lex(input []byte) chan Token { // TODO: accept io.Reader?
-	lexer := &Lexer{input: input, output: make(chan Token)}
+	lexer := &lexer{input: input, output: make(chan Token)}
 	go lexer.lex()
 	return lexer.output
 }
-func (this *Lexer) lex() {
+func (this *lexer) lex() {
 	defer close(this.output)
 
 	if len(this.input) == 0 {
@@ -51,29 +51,29 @@ func (this *Lexer) lex() {
 	}
 }
 
-func (this *Lexer) peek() rune {
+func (this *lexer) peek() rune {
 	return this.at(0)
 }
-func (this *Lexer) at(offset int) rune {
+func (this *lexer) at(offset int) rune {
 	if this.stop >= len(this.input) {
 		return 0
 	}
 	return rune(this.input[this.stop+offset])
 }
-func (this *Lexer) stepN(n int) {
+func (this *lexer) stepN(n int) {
 	this.stop += n
 }
-func (this *Lexer) step() {
+func (this *lexer) step() {
 	this.stepN(1)
 }
-func (this *Lexer) accept(set ...rune) bool {
+func (this *lexer) accept(set ...rune) bool {
 	ok := slices.Index(set, this.peek()) >= 0
 	if ok {
 		this.step()
 	}
 	return ok
 }
-func (this *Lexer) acceptN(n int, set ...rune) bool {
+func (this *lexer) acceptN(n int, set ...rune) bool {
 	for x := 0; x < n; x++ {
 		if !this.accept(set...) {
 			return false
@@ -81,7 +81,7 @@ func (this *Lexer) acceptN(n int, set ...rune) bool {
 	}
 	return true
 }
-func (this *Lexer) acceptRun(set ...rune) (result int) {
+func (this *lexer) acceptRun(set ...rune) (result int) {
 	for {
 		if !this.accept(set...) {
 			return result
@@ -89,7 +89,7 @@ func (this *Lexer) acceptRun(set ...rune) (result int) {
 		result++
 	}
 }
-func (this *Lexer) acceptSequence(sequence []rune) bool {
+func (this *lexer) acceptSequence(sequence []rune) bool {
 	for _, s := range sequence {
 		if !this.accept(s) {
 			return false
@@ -97,7 +97,7 @@ func (this *Lexer) acceptSequence(sequence []rune) bool {
 	}
 	return true
 }
-func (this *Lexer) emit(tokenType TokenType) {
+func (this *lexer) emit(tokenType TokenType) {
 	if tokenType == TokenIllegal {
 		this.stop = len(this.input)
 	}
@@ -105,7 +105,7 @@ func (this *Lexer) emit(tokenType TokenType) {
 	this.start = this.stop
 }
 
-func (this *Lexer) lexValue() bool {
+func (this *lexer) lexValue() bool {
 	this.acceptWhitespace()
 
 	if this.acceptSequence(_null) {
@@ -129,13 +129,13 @@ func (this *Lexer) lexValue() bool {
 	return true
 }
 
-func (this *Lexer) acceptWhitespace() {
+func (this *lexer) acceptWhitespace() {
 	if this.acceptRun(whitespaces...) > 0 {
 		this.emit(TokenWhitespace)
 	}
 }
 
-func (this *Lexer) acceptNumber() bool {
+func (this *lexer) acceptNumber() bool {
 	if !couldBeNumber(this.peek()) {
 		return false
 	}
@@ -162,7 +162,7 @@ func (this *Lexer) acceptNumber() bool {
 	}
 	return true
 }
-func (this *Lexer) acceptString() bool {
+func (this *lexer) acceptString() bool {
 	if !this.accept(quote) {
 		return false
 	}
@@ -195,7 +195,7 @@ func (this *Lexer) acceptString() bool {
 	this.emit(TokenIllegal)
 	return false
 }
-func (this *Lexer) acceptArray() bool {
+func (this *lexer) acceptArray() bool {
 	if !this.accept(leftSquare) {
 		return false
 	}
@@ -218,7 +218,7 @@ func (this *Lexer) acceptArray() bool {
 	this.emit(TokenIllegal)
 	return false
 }
-func (this *Lexer) acceptObject() bool {
+func (this *lexer) acceptObject() bool {
 	if !this.accept(leftCurly) {
 		return false
 	}
