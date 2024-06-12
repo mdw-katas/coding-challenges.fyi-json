@@ -55,6 +55,41 @@ func TestLex(t *testing.T) {
 		testLex(t, `"\u123x"`, token(TokenIllegal, `"\u123x"`))
 		testLex(t, `"`+"\t"+`"`, token(TokenIllegal, `"`+"\t"+`"`))
 	})
+	t.Run("arrays", func(t *testing.T) {
+		testLex(t, `[]`, token(TokenArrayStart, `[`), token(TokenArrayStop, `]`))
+		testLex(t, `[1]`,
+			token(TokenArrayStart, `[`),
+			token(TokenNumber, "1"),
+			token(TokenArrayStop, `]`),
+		)
+		testLex(t, `[1,2]`,
+			token(TokenArrayStart, `[`),
+			token(TokenNumber, "1"),
+			token(TokenComma, ","),
+			token(TokenNumber, "2"),
+			token(TokenArrayStop, "]"),
+		)
+		testLex(t, `[1,"b",3]`,
+			token(TokenArrayStart, `[`),
+			token(TokenNumber, "1"),
+			token(TokenComma, ","),
+			token(TokenString, `"b"`),
+			token(TokenComma, ","),
+			token(TokenNumber, "3"),
+			token(TokenArrayStop, "]"),
+		)
+		testLex(t, `[1,["b"],3]`,
+			token(TokenArrayStart, `[`),
+			token(TokenNumber, `1`),
+			token(TokenComma, `,`),
+			token(TokenArrayStart, `[`),
+			token(TokenString, `"b"`),
+			token(TokenArrayStop, `]`),
+			token(TokenComma, `,`),
+			token(TokenNumber, `3`),
+			token(TokenArrayStop, `]`),
+		)
+	})
 }
 func lex(s string) (result []Token) {
 	defer func() { recover() }()

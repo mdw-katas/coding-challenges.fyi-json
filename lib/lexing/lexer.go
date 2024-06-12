@@ -5,12 +5,15 @@ import "slices"
 type TokenType string
 
 const (
-	TokenIllegal TokenType = "<ILLEGAL>"
-	TokenNull    TokenType = "<null>"
-	TokenTrue    TokenType = "<true>"
-	TokenFalse   TokenType = "<false>"
-	TokenNumber  TokenType = "<number>"
-	TokenString  TokenType = "<string>"
+	TokenIllegal    TokenType = "<ILLEGAL>"
+	TokenNull       TokenType = "<null>"
+	TokenTrue       TokenType = "<true>"
+	TokenFalse      TokenType = "<false>"
+	TokenNumber     TokenType = "<number>"
+	TokenString     TokenType = "<string>"
+	TokenArrayStart TokenType = "<[>"
+	TokenArrayStop  TokenType = "<]>"
+	TokenComma      TokenType = "<,>"
 )
 
 type Token struct {
@@ -120,8 +123,33 @@ func (this *Lexer) lexValue() stateMethod {
 		if this.acceptString() {
 			this.emit(TokenString)
 		}
+	} else if this.at(0) == '[' {
+		this.lexArray()
 	}
 	return nil
+}
+
+func (this *Lexer) lexArray() {
+	this.step()
+	this.emit(TokenArrayStart)
+	if this.at(0) == ']' {
+		this.lexArrayStop()
+		return
+	}
+	this.lexValue()
+	for {
+		if this.accept(',') {
+			this.emit(TokenComma)
+			this.lexValue()
+		} else {
+			break
+		}
+	}
+	this.lexArrayStop()
+}
+func (this *Lexer) lexArrayStop() {
+	this.step()
+	this.emit(TokenArrayStop)
 }
 
 func (this *Lexer) acceptString() bool {
