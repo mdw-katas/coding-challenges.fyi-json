@@ -34,6 +34,7 @@ func main() {
 		if token.Type == lexing.TokenIllegal {
 			log.Fatalf("Illegal token at index %d: %s", byteCount, token.Value)
 		}
+		// TODO: feed token to a printer
 		tokenCount++
 		byteCount += len(token.Value)
 	}
