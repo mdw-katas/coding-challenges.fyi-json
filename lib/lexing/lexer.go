@@ -124,16 +124,16 @@ func (this *Lexer) lexValue() stateMethod {
 			this.emit(TokenString)
 		}
 	} else if this.at(0) == '[' {
-		this.lexArray()
+		this.acceptArray()
 	}
 	return nil
 }
 
-func (this *Lexer) lexArray() {
+func (this *Lexer) acceptArray() {
 	this.step()
 	this.emit(TokenArrayStart)
 	if this.at(0) == ']' {
-		this.lexArrayStop()
+		this.acceptArrayStop()
 		return
 	}
 	this.lexValue()
@@ -145,15 +145,19 @@ func (this *Lexer) lexArray() {
 			break
 		}
 	}
-	this.lexArrayStop()
+	if this.at(0) == ']' {
+		this.acceptArrayStop()
+	} else {
+		this.emit(TokenIllegal)
+	}
 }
-func (this *Lexer) lexArrayStop() {
+func (this *Lexer) acceptArrayStop() {
 	this.step()
 	this.emit(TokenArrayStop)
 }
 
 func (this *Lexer) acceptString() bool {
-	for {
+	for this.stop < len(this.input) {
 		switch this.at(0) {
 		case '\\':
 			switch this.at(1) {
@@ -179,6 +183,8 @@ func (this *Lexer) acceptString() bool {
 			this.step()
 		}
 	}
+	this.emit(TokenIllegal)
+	return false
 }
 func (this *Lexer) acceptNumber() bool {
 	this.accept(sign...)

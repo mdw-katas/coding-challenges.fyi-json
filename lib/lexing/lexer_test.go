@@ -21,6 +21,7 @@ func TestLex(t *testing.T) {
 	})
 	t.Run("numbers", func(t *testing.T) {
 		testLex(t, `0`, token(TokenNumber, "0"))
+		testLex(t, `0a`, token(TokenNumber, "0"), token(TokenIllegal, "a"))
 		testLex(t, `1`, token(TokenNumber, "1"))
 		testLex(t, `1234567890`, token(TokenNumber, "1234567890"))
 		testLex(t, `0.NaN`, token(TokenIllegal, "0.NaN"))
@@ -34,6 +35,7 @@ func TestLex(t *testing.T) {
 		testLex(t, `3.7e+5`, token(TokenNumber, "3.7e+5"))
 	})
 	t.Run("strings", func(t *testing.T) {
+		testLex(t, `"`, token(TokenIllegal, `"`))
 		testLex(t, `""`, token(TokenString, `""`))
 		testLex(t, `"a"`, token(TokenString, `"a"`))
 		testLex(t, `"ab"`, token(TokenString, `"ab"`))
@@ -56,6 +58,8 @@ func TestLex(t *testing.T) {
 		testLex(t, `"`+"\t"+`"`, token(TokenIllegal, `"`+"\t"+`"`))
 	})
 	t.Run("arrays", func(t *testing.T) {
+		testLex(t, `[`, token(TokenArrayStart, `[`), token(TokenIllegal, ""))
+		testLex(t, `[1`, token(TokenArrayStart, `[`), token(TokenNumber, `1`), token(TokenIllegal, ""))
 		testLex(t, `[]`, token(TokenArrayStart, `[`), token(TokenArrayStop, `]`))
 		testLex(t, `[1]`,
 			token(TokenArrayStart, `[`),
