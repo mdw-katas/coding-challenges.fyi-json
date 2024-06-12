@@ -121,9 +121,9 @@ func (this *Lexer) lexValue() bool {
 		this.emit(TokenNumber)
 	} else if this.acceptString() {
 		this.emit(TokenString)
-	} else if this.peek() == '[' {
+	} else if this.peek() == leftSquare {
 		this.acceptArray()
-	} else if this.peek() == '{' {
+	} else if this.peek() == leftCurly {
 		this.acceptObject()
 	} else {
 		return false
@@ -134,20 +134,20 @@ func (this *Lexer) lexValue() bool {
 func (this *Lexer) acceptArray() {
 	this.step()
 	this.emit(TokenArrayStart)
-	if this.at(0) == ']' {
+	if this.peek() == rightSquare {
 		this.acceptArrayStop()
 		return
 	}
 	this.lexValue()
 	for {
-		if this.accept(',') {
+		if this.accept(comma) {
 			this.emit(TokenComma)
 			this.lexValue()
 		} else {
 			break
 		}
 	}
-	if this.at(0) == ']' {
+	if this.peek() == rightSquare {
 		this.acceptArrayStop()
 	} else {
 		this.emit(TokenIllegal)
@@ -161,7 +161,7 @@ func (this *Lexer) acceptArrayStop() {
 func (this *Lexer) acceptObject() {
 	this.step()
 	this.emit(TokenObjectStart)
-	if this.at(0) == '}' {
+	if this.peek() == rightCurly {
 		this.acceptObjectStop()
 		return
 	}
@@ -174,7 +174,7 @@ func (this *Lexer) acceptObject() {
 			this.emit(TokenString)
 		}
 
-		if !this.accept(':') {
+		if !this.accept(colon) {
 			this.emit(TokenIllegal)
 			return
 		} else {
@@ -186,7 +186,7 @@ func (this *Lexer) acceptObject() {
 			return
 		}
 
-		if !this.accept(',') {
+		if !this.accept(comma) {
 			break
 		}
 		this.emit(TokenComma)
@@ -200,16 +200,16 @@ func (this *Lexer) acceptObjectStop() {
 }
 
 func (this *Lexer) acceptString() bool {
-	if !this.accept('"') {
+	if !this.accept(quote) {
 		return false
 	}
 	for this.stop < len(this.input) {
-		switch this.at(0) {
-		case '\\':
+		switch this.peek() {
+		case reverseSolidus:
 			switch this.at(1) {
-			case '"', '\\', '/', 'b', 'f', 'n', 'r', 't':
+			case quote, reverseSolidus, solidus, backspace, formFeed, lineFeed, carriageReturn, tab:
 				this.stepN(2)
-			case 'u':
+			case unicode:
 				this.stepN(2)
 				if this.acceptN(4, hexDigits...) {
 					continue
@@ -222,8 +222,8 @@ func (this *Lexer) acceptString() bool {
 			0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
 			0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F:
 			return false
-		case '"':
-			this.accept('"')
+		case quote:
+			this.accept(quote)
 			return true
 		default:
 			this.step()
@@ -260,7 +260,7 @@ func (this *Lexer) acceptNumber() bool {
 	return true
 }
 
-func isWhiteSpace(r rune) bool  { return r == ' ' } // TODO: additional whitespace characters
+func isWhiteSpace(r rune) bool  { return r == space } // TODO: additional whitespace characters
 func couldBeNumber(r rune) bool { return isSign(r) || isDigit(r) }
 func isDigit(r rune) bool       { return zero <= r && r <= nine }
 func isSign(r rune) bool        { return r == positive || r == negative }
@@ -276,11 +276,27 @@ var (
 )
 
 const (
-	positive     = '+'
-	negative     = '-'
-	_exponent    = 'e'
-	_Exponent    = 'E'
-	decimalPoint = '.'
-	zero         = '0'
-	nine         = '9'
+	positive       = '+'
+	negative       = '-'
+	_exponent      = 'e'
+	_Exponent      = 'E'
+	decimalPoint   = '.'
+	zero           = '0'
+	nine           = '9'
+	quote          = '"'
+	comma          = ','
+	colon          = ':'
+	leftSquare     = '['
+	rightSquare    = ']'
+	leftCurly      = '{'
+	rightCurly     = '}'
+	space          = ' '
+	backspace      = 'b'
+	lineFeed       = 'n'
+	carriageReturn = 'r'
+	formFeed       = 'f'
+	tab            = 't'
+	unicode        = 'u'
+	solidus        = '/'
+	reverseSolidus = '\\'
 )
