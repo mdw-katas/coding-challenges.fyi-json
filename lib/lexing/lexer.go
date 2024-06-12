@@ -5,23 +5,24 @@ import "slices"
 type TokenType string
 
 const (
-	TokenIllegal    TokenType = "<ILLEGAL>"
-	TokenNull       TokenType = "<null>"
-	TokenTrue       TokenType = "<true>"
-	TokenFalse      TokenType = "<false>"
-	TokenNumber     TokenType = "<number>"
-	TokenString     TokenType = "<string>"
-	TokenArrayStart TokenType = "<[>"
-	TokenArrayStop  TokenType = "<]>"
-	TokenComma      TokenType = "<,>"
+	TokenIllegal     TokenType = "<ILLEGAL>"
+	TokenNull        TokenType = "<null>"
+	TokenTrue        TokenType = "<true>"
+	TokenFalse       TokenType = "<false>"
+	TokenNumber      TokenType = "<number>"
+	TokenString      TokenType = "<string>"
+	TokenArrayStart  TokenType = "<[>"
+	TokenArrayStop   TokenType = "<]>"
+	TokenComma       TokenType = "<,>"
+	TokenObjectStart TokenType = "<{>"
+	TokenObjectStop  TokenType = "<}>"
+	TokenColon       TokenType = "<:>"
 )
 
 type Token struct {
 	Type  TokenType
 	Value []byte
 }
-
-type stateMethod func() stateMethod
 
 type Lexer struct {
 	input  []byte
@@ -37,15 +38,16 @@ func Lex(input []byte) chan Token { // TODO: accept io.Reader?
 }
 func (this *Lexer) lex() {
 	defer close(this.output)
+
 	if len(this.input) == 0 {
 		return
 	}
 	if isWhiteSpace(this.peek()) {
 		return
 	}
-	for state := this.lexValue; state != nil && this.stop < len(this.input); {
-		state = state()
-	}
+
+	this.lexValue()
+
 	if this.stop < len(this.input) {
 		this.emit(TokenIllegal)
 	}
@@ -108,25 +110,25 @@ func (this *Lexer) emit(tokenType TokenType) {
 	this.start = this.stop
 }
 
-func (this *Lexer) lexValue() stateMethod {
+func (this *Lexer) lexValue() bool {
 	if this.acceptSequence(_null) {
 		this.emit(TokenNull)
 	} else if this.acceptSequence(_true) {
 		this.emit(TokenTrue)
 	} else if this.acceptSequence(_false) {
 		this.emit(TokenFalse)
-	} else if couldBeNumber(this.peek()) {
-		if this.acceptNumber() {
-			this.emit(TokenNumber)
-		}
-	} else if this.accept('"') {
-		if this.acceptString() {
-			this.emit(TokenString)
-		}
-	} else if this.at(0) == '[' {
+	} else if this.acceptNumber() {
+		this.emit(TokenNumber)
+	} else if this.acceptString() {
+		this.emit(TokenString)
+	} else if this.peek() == '[' {
 		this.acceptArray()
+	} else if this.peek() == '{' {
+		this.acceptObject()
+	} else {
+		return false
 	}
-	return nil
+	return true
 }
 
 func (this *Lexer) acceptArray() {
@@ -156,7 +158,51 @@ func (this *Lexer) acceptArrayStop() {
 	this.emit(TokenArrayStop)
 }
 
+func (this *Lexer) acceptObject() {
+	this.step()
+	this.emit(TokenObjectStart)
+	if this.at(0) == '}' {
+		this.acceptObjectStop()
+		return
+	}
+
+	for {
+		if !this.acceptString() {
+			this.emit(TokenIllegal)
+			return
+		} else {
+			this.emit(TokenString)
+		}
+
+		if !this.accept(':') {
+			this.emit(TokenIllegal)
+			return
+		} else {
+			this.emit(TokenColon)
+		}
+
+		if !this.lexValue() {
+			this.emit(TokenIllegal)
+			return
+		}
+
+		if !this.accept(',') {
+			break
+		}
+		this.emit(TokenComma)
+	}
+
+	this.acceptObjectStop()
+}
+func (this *Lexer) acceptObjectStop() {
+	this.step()
+	this.emit(TokenObjectStop)
+}
+
 func (this *Lexer) acceptString() bool {
+	if !this.accept('"') {
+		return false
+	}
 	for this.stop < len(this.input) {
 		switch this.at(0) {
 		case '\\':
@@ -187,6 +233,9 @@ func (this *Lexer) acceptString() bool {
 	return false
 }
 func (this *Lexer) acceptNumber() bool {
+	if !couldBeNumber(this.peek()) {
+		return false
+	}
 	this.accept(sign...)
 	if !isDigit(this.peek()) {
 		this.stop = this.start

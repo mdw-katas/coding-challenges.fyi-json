@@ -94,6 +94,50 @@ func TestLex(t *testing.T) {
 			token(TokenArrayStop, `]`),
 		)
 	})
+	t.Run("objects", func(t *testing.T) {
+		testLex(t, `{`, token(TokenObjectStart, `{`), token(TokenIllegal, ``))
+		testLex(t, `{}`, token(TokenObjectStart, `{`), token(TokenObjectStop, `}`))
+		testLex(t, `{1}`, token(TokenObjectStart, `{`), token(TokenIllegal, `1}`))
+		testLex(t, `{"a":}`,
+			token(TokenObjectStart, `{`),
+			token(TokenString, `"a"`),
+			token(TokenColon, `:`),
+			token(TokenIllegal, `}`),
+		)
+		testLex(t, `{"a":1}`,
+			token(TokenObjectStart, `{`),
+			token(TokenString, `"a"`),
+			token(TokenColon, `:`),
+			token(TokenNumber, `1`),
+			token(TokenObjectStop, `}`),
+		)
+		testLex(t, `{"a":1,"b":2}`,
+			token(TokenObjectStart, `{`),
+			token(TokenString, `"a"`),
+			token(TokenColon, `:`),
+			token(TokenNumber, `1`),
+			token(TokenComma, `,`),
+			token(TokenString, `"b"`),
+			token(TokenColon, `:`),
+			token(TokenNumber, `2`),
+			token(TokenObjectStop, `}`),
+		)
+		testLex(t, `{"a":1,"b":{"B":2}}`,
+			token(TokenObjectStart, `{`),
+			token(TokenString, `"a"`),
+			token(TokenColon, `:`),
+			token(TokenNumber, `1`),
+			token(TokenComma, `,`),
+			token(TokenString, `"b"`),
+			token(TokenColon, `:`),
+			token(TokenObjectStart, `{`),
+			token(TokenString, `"B"`),
+			token(TokenColon, `:`),
+			token(TokenNumber, `2`),
+			token(TokenObjectStop, `}`),
+			token(TokenObjectStop, `}`),
+		)
+	})
 }
 func lex(s string) (result []Token) {
 	defer func() { recover() }()
