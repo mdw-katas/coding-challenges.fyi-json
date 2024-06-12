@@ -115,8 +115,6 @@ func (this *Lexer) lexValue() stateMethod {
 	} else if couldBeNumber(this.peek()) {
 		if this.acceptNumber() {
 			this.emit(TokenNumber)
-		} else {
-			this.emit(TokenIllegal)
 		}
 	} else if this.accept('"') {
 		if this.acceptString() {
