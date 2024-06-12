@@ -10,8 +10,9 @@ import (
 func TestLex(t *testing.T) {
 	t.Run("top-level", func(t *testing.T) {
 		testLex(t, "")
-		testLex(t, " ")
+		testLex(t, " \t\r\n", token(TokenWhitespace, " \t\r\n"))
 		testLex(t, `null`, token(TokenNull, "null"))
+		testLex(t, ` null `, token(TokenWhitespace, ` `), token(TokenNull, "null"), token(TokenWhitespace, ` `))
 		testLex(t, `true`, token(TokenTrue, "true"))
 		testLex(t, `false`, token(TokenFalse, "false"))
 		testLex(t, `null--trailing-bad-stuff`,
@@ -60,7 +61,15 @@ func TestLex(t *testing.T) {
 	t.Run("arrays", func(t *testing.T) {
 		testLex(t, `[`, token(TokenArrayStart, `[`), token(TokenIllegal, ""))
 		testLex(t, `[1`, token(TokenArrayStart, `[`), token(TokenNumber, `1`), token(TokenIllegal, ""))
-		testLex(t, `[]`, token(TokenArrayStart, `[`), token(TokenArrayStop, `]`))
+		testLex(t, `[]`,
+			token(TokenArrayStart, `[`),
+			token(TokenArrayStop, `]`),
+		)
+		testLex(t, `[ ]`,
+			token(TokenArrayStart, `[`),
+			token(TokenWhitespace, ` `),
+			token(TokenArrayStop, `]`),
+		)
 		testLex(t, `[1]`,
 			token(TokenArrayStart, `[`),
 			token(TokenNumber, "1"),
@@ -82,21 +91,34 @@ func TestLex(t *testing.T) {
 			token(TokenNumber, "3"),
 			token(TokenArrayStop, "]"),
 		)
-		testLex(t, `[1,["b"],3]`,
+		testLex(t, `[ 1 , [ "b" ] , 3 ]`,
 			token(TokenArrayStart, `[`),
+			token(TokenWhitespace, ` `),
 			token(TokenNumber, `1`),
+			token(TokenWhitespace, ` `),
 			token(TokenComma, `,`),
+			token(TokenWhitespace, ` `),
 			token(TokenArrayStart, `[`),
+			token(TokenWhitespace, ` `),
 			token(TokenString, `"b"`),
+			token(TokenWhitespace, ` `),
 			token(TokenArrayStop, `]`),
+			token(TokenWhitespace, ` `),
 			token(TokenComma, `,`),
+			token(TokenWhitespace, ` `),
 			token(TokenNumber, `3`),
+			token(TokenWhitespace, ` `),
 			token(TokenArrayStop, `]`),
 		)
 	})
 	t.Run("objects", func(t *testing.T) {
 		testLex(t, `{`, token(TokenObjectStart, `{`), token(TokenIllegal, ``))
 		testLex(t, `{}`, token(TokenObjectStart, `{`), token(TokenObjectStop, `}`))
+		testLex(t, `{ }`,
+			token(TokenObjectStart, `{`),
+			token(TokenWhitespace, ` `),
+			token(TokenObjectStop, `}`),
+		)
 		testLex(t, `{1}`, token(TokenObjectStart, `{`), token(TokenIllegal, `1}`))
 		testLex(t, `{"a":}`,
 			token(TokenObjectStart, `{`),
@@ -120,6 +142,25 @@ func TestLex(t *testing.T) {
 			token(TokenString, `"b"`),
 			token(TokenColon, `:`),
 			token(TokenNumber, `2`),
+			token(TokenObjectStop, `}`),
+		)
+		testLex(t, `{ "a" : 1 , "b" : 2 }`,
+			token(TokenObjectStart, `{`),
+			token(TokenWhitespace, ` `),
+			token(TokenString, `"a"`),
+			token(TokenWhitespace, ` `),
+			token(TokenColon, `:`),
+			token(TokenWhitespace, ` `),
+			token(TokenNumber, `1`),
+			token(TokenWhitespace, ` `),
+			token(TokenComma, `,`),
+			token(TokenWhitespace, ` `),
+			token(TokenString, `"b"`),
+			token(TokenWhitespace, ` `),
+			token(TokenColon, `:`),
+			token(TokenWhitespace, ` `),
+			token(TokenNumber, `2`),
+			token(TokenWhitespace, ` `),
 			token(TokenObjectStop, `}`),
 		)
 		testLex(t, `{"a":1,"b":{"B":2}}`,

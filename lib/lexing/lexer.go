@@ -6,6 +6,7 @@ type TokenType string
 
 const (
 	TokenIllegal     TokenType = "<ILLEGAL>"
+	TokenWhitespace  TokenType = "<whitespace>"
 	TokenNull        TokenType = "<null>"
 	TokenTrue        TokenType = "<true>"
 	TokenFalse       TokenType = "<false>"
@@ -40,9 +41,6 @@ func (this *Lexer) lex() {
 	defer close(this.output)
 
 	if len(this.input) == 0 {
-		return
-	}
-	if isWhiteSpace(this.peek()) {
 		return
 	}
 
@@ -108,6 +106,8 @@ func (this *Lexer) emit(tokenType TokenType) {
 }
 
 func (this *Lexer) lexValue() bool {
+	this.acceptWhitespace()
+
 	if this.acceptSequence(_null) {
 		this.emit(TokenNull)
 	} else if this.acceptSequence(_true) {
@@ -125,7 +125,14 @@ func (this *Lexer) lexValue() bool {
 	} else {
 		return false
 	}
+	this.acceptWhitespace()
 	return true
+}
+
+func (this *Lexer) acceptWhitespace() {
+	if this.acceptRun(whitespaces...) > 0 {
+		this.emit(TokenWhitespace)
+	}
 }
 
 func (this *Lexer) acceptNumber() bool {
@@ -216,17 +223,21 @@ func (this *Lexer) acceptObject() bool {
 		return false
 	}
 	this.emit(TokenObjectStart)
+	this.acceptWhitespace()
 	if this.accept(rightCurly) {
 		return true
 	}
 
 	for {
+		this.acceptWhitespace()
 		if !this.acceptString() {
 			this.emit(TokenIllegal)
 			return false
 		} else {
 			this.emit(TokenString)
 		}
+
+		this.acceptWhitespace()
 
 		if !this.accept(colon) {
 			this.emit(TokenIllegal)
@@ -235,16 +246,24 @@ func (this *Lexer) acceptObject() bool {
 			this.emit(TokenColon)
 		}
 
+		this.acceptWhitespace()
+
 		if !this.lexValue() {
 			this.emit(TokenIllegal)
 			return false
 		}
 
+		this.acceptWhitespace()
+
 		if !this.accept(comma) {
 			break
 		}
 		this.emit(TokenComma)
+
+		this.acceptWhitespace()
 	}
+
+	this.acceptWhitespace()
 
 	if this.accept(rightCurly) {
 		return true
@@ -253,19 +272,19 @@ func (this *Lexer) acceptObject() bool {
 	return false
 }
 
-func isWhiteSpace(r rune) bool  { return r == space } // TODO: additional whitespace characters
 func couldBeNumber(r rune) bool { return isSign(r) || isDigit(r) }
 func isDigit(r rune) bool       { return zero <= r && r <= nine }
 func isSign(r rune) bool        { return r == positive || r == negative }
 
 var (
-	_null     = []rune("null")
-	_true     = []rune("true")
-	_false    = []rune("false")
-	digits    = []rune("0123456789")
-	hexDigits = append(digits, []rune("abcdefg"+"ABCDEFG")...)
-	sign      = []rune{positive, negative}
-	exponent  = []rune{_exponent, _Exponent}
+	_null       = []rune("null")
+	_true       = []rune("true")
+	_false      = []rune("false")
+	whitespaces = []rune{space, '\n', '\r', '\t'}
+	digits      = []rune("0123456789")
+	hexDigits   = append(digits, []rune("abcdefg"+"ABCDEFG")...)
+	sign        = []rune{positive, negative}
+	exponent    = []rune{_exponent, _Exponent}
 )
 
 const (
