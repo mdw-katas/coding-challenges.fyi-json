@@ -128,6 +128,66 @@ func (this *Lexer) lexValue() bool {
 	return true
 }
 
+func (this *Lexer) acceptNumber() bool {
+	if !couldBeNumber(this.peek()) {
+		return false
+	}
+	this.accept(sign...)
+	if !isDigit(this.peek()) {
+		this.stop = this.start
+		return false
+	}
+	if !this.accept(zero) {
+		if this.acceptRun(digits...) == 0 {
+			return false
+		}
+	}
+	if this.accept(decimalPoint) {
+		if this.acceptRun(digits...) == 0 {
+			return false
+		}
+	}
+	if this.accept(exponent...) {
+		this.accept(sign...)
+		if this.acceptRun(digits...) == 0 {
+			return false
+		}
+	}
+	return true
+}
+func (this *Lexer) acceptString() bool {
+	if !this.accept(quote) {
+		return false
+	}
+	for this.stop < len(this.input) {
+		switch this.peek() {
+		case reverseSolidus:
+			switch this.at(1) {
+			case quote, reverseSolidus, solidus, backspace, formFeed, lineFeed, carriageReturn, tab:
+				this.stepN(2)
+			case unicode:
+				this.stepN(2)
+				if this.acceptN(4, hexDigits...) {
+					continue
+				} else {
+					return false
+				}
+			}
+		case 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+			0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+			0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+			0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F:
+			return false
+		case quote:
+			this.accept(quote)
+			return true
+		default:
+			this.step()
+		}
+	}
+	this.emit(TokenIllegal)
+	return false
+}
 func (this *Lexer) acceptArray() bool {
 	if !this.accept(leftSquare) {
 		return false
@@ -191,66 +251,6 @@ func (this *Lexer) acceptObject() bool {
 	}
 	this.emit(TokenIllegal)
 	return false
-}
-func (this *Lexer) acceptString() bool {
-	if !this.accept(quote) {
-		return false
-	}
-	for this.stop < len(this.input) {
-		switch this.peek() {
-		case reverseSolidus:
-			switch this.at(1) {
-			case quote, reverseSolidus, solidus, backspace, formFeed, lineFeed, carriageReturn, tab:
-				this.stepN(2)
-			case unicode:
-				this.stepN(2)
-				if this.acceptN(4, hexDigits...) {
-					continue
-				} else {
-					return false
-				}
-			}
-		case 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-			0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
-			0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F:
-			return false
-		case quote:
-			this.accept(quote)
-			return true
-		default:
-			this.step()
-		}
-	}
-	this.emit(TokenIllegal)
-	return false
-}
-func (this *Lexer) acceptNumber() bool {
-	if !couldBeNumber(this.peek()) {
-		return false
-	}
-	this.accept(sign...)
-	if !isDigit(this.peek()) {
-		this.stop = this.start
-		return false
-	}
-	if !this.accept(zero) {
-		if this.acceptRun(digits...) == 0 {
-			return false
-		}
-	}
-	if this.accept(decimalPoint) {
-		if this.acceptRun(digits...) == 0 {
-			return false
-		}
-	}
-	if this.accept(exponent...) {
-		this.accept(sign...)
-		if this.acceptRun(digits...) == 0 {
-			return false
-		}
-	}
-	return true
 }
 
 func isWhiteSpace(r rune) bool  { return r == space } // TODO: additional whitespace characters
