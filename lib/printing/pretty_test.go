@@ -12,7 +12,8 @@ func TestPrettyPrinter(t *testing.T) {
 	out := &bytes.Buffer{}
 	input := `{"a": [1,2,3 ],"b":"hi" }`
 	expected := `{
-  "a": [1,
+  "a": [
+    1,
     2,
     3
   ],
