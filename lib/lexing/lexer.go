@@ -62,9 +62,6 @@ func (this *Lexer) at(offset int) rune {
 	}
 	return rune(this.input[this.stop+offset])
 }
-func (this *Lexer) from(offset int) rune {
-	return rune(this.input[this.start+offset])
-}
 func (this *Lexer) stepN(n int) {
 	this.stop += n
 }
@@ -121,22 +118,23 @@ func (this *Lexer) lexValue() bool {
 		this.emit(TokenNumber)
 	} else if this.acceptString() {
 		this.emit(TokenString)
-	} else if this.peek() == leftSquare {
-		this.acceptArray()
-	} else if this.peek() == leftCurly {
-		this.acceptObject()
+	} else if this.acceptArray() {
+		this.emit(TokenArrayStop)
+	} else if this.acceptObject() {
+		this.emit(TokenObjectStop)
 	} else {
 		return false
 	}
 	return true
 }
 
-func (this *Lexer) acceptArray() {
-	this.step()
+func (this *Lexer) acceptArray() bool {
+	if !this.accept(leftSquare) {
+		return false
+	}
 	this.emit(TokenArrayStart)
-	if this.peek() == rightSquare {
-		this.acceptArrayStop()
-		return
+	if this.accept(rightSquare) {
+		return true
 	}
 	this.lexValue()
 	for {
@@ -147,43 +145,39 @@ func (this *Lexer) acceptArray() {
 			break
 		}
 	}
-	if this.peek() == rightSquare {
-		this.acceptArrayStop()
-	} else {
-		this.emit(TokenIllegal)
+	if this.accept(rightSquare) {
+		return true
 	}
+	this.emit(TokenIllegal)
+	return false
 }
-func (this *Lexer) acceptArrayStop() {
-	this.step()
-	this.emit(TokenArrayStop)
-}
-
-func (this *Lexer) acceptObject() {
-	this.step()
+func (this *Lexer) acceptObject() bool {
+	if !this.accept(leftCurly) {
+		return false
+	}
 	this.emit(TokenObjectStart)
-	if this.peek() == rightCurly {
-		this.acceptObjectStop()
-		return
+	if this.accept(rightCurly) {
+		return true
 	}
 
 	for {
 		if !this.acceptString() {
 			this.emit(TokenIllegal)
-			return
+			return false
 		} else {
 			this.emit(TokenString)
 		}
 
 		if !this.accept(colon) {
 			this.emit(TokenIllegal)
-			return
+			return false
 		} else {
 			this.emit(TokenColon)
 		}
 
 		if !this.lexValue() {
 			this.emit(TokenIllegal)
-			return
+			return false
 		}
 
 		if !this.accept(comma) {
@@ -192,13 +186,12 @@ func (this *Lexer) acceptObject() {
 		this.emit(TokenComma)
 	}
 
-	this.acceptObjectStop()
+	if this.accept(rightCurly) {
+		return true
+	}
+	this.emit(TokenIllegal)
+	return false
 }
-func (this *Lexer) acceptObjectStop() {
-	this.step()
-	this.emit(TokenObjectStop)
-}
-
 func (this *Lexer) acceptString() bool {
 	if !this.accept(quote) {
 		return false
