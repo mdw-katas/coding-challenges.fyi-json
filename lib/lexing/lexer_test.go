@@ -2,6 +2,7 @@ package lexing
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/mdwhatcott/testing/should"
@@ -198,7 +199,7 @@ func TestLex(t *testing.T) {
 }
 func lex(s string) (result []Token) {
 	defer func() { recover() }()
-	for token := range Lex([]byte(s)) {
+	for token := range Lex(strings.NewReader(s)) {
 		result = append(result, token)
 	}
 	return result

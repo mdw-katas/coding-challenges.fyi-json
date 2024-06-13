@@ -2,6 +2,7 @@ package printing
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/mdwhatcott/coding-challenges.fyi-json/lib/lexing"
@@ -13,7 +14,7 @@ func TestCompactPrinter(t *testing.T) {
 	input := `{"a": [1,2,3 ],"b":"hi" }`
 	expected := `{"a":[1,2,3],"b":"hi"}`
 	printer := NewCompactPrinter(out)
-	for token := range lexing.Lex([]byte(input)) {
+	for token := range lexing.Lex(strings.NewReader(input)) {
 		printer.Print(token)
 	}
 	should.So(t, out.String(), should.Equal, expected)

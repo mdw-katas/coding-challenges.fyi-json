@@ -2,6 +2,7 @@ package printing
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/mdwhatcott/coding-challenges.fyi-json/lib/lexing"
@@ -20,7 +21,7 @@ func TestPrettyPrinter(t *testing.T) {
   "b": "hi"
 }`
 	printer := NewPrettyPrinter(out)
-	for token := range lexing.Lex([]byte(input)) {
+	for token := range lexing.Lex(strings.NewReader(input)) {
 		printer.Print(token)
 	}
 	should.So(t, out.String(), should.Equal, expected)

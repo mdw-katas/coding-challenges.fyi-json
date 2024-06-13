@@ -1,6 +1,9 @@
 package lexing
 
-import "slices"
+import (
+	"io"
+	"slices"
+)
 
 type TokenType string
 
@@ -26,29 +29,42 @@ type Token struct {
 }
 
 type lexer struct {
-	input  []byte
+	source io.Reader
+	chunk  []byte
+	input  []byte // TODO: prevent input from buffering the entirety of the source data.
 	start  int
 	stop   int
 	output chan Token
 }
 
-func Lex(input []byte) chan Token { // TODO: accept io.Reader?
-	lexer := &lexer{input: input, output: make(chan Token)}
+func Lex(source io.Reader) chan Token {
+	lexer := &lexer{source: source, chunk: make([]byte, 1024), output: make(chan Token)}
 	go lexer.lex()
 	return lexer.output
 }
 func (this *lexer) lex() {
 	defer close(this.output)
 
+	this.readChunk()
+
 	if len(this.input) == 0 {
 		return
 	}
-
 	if !this.lexValue() {
 		this.emit(TokenIllegal)
-	} else if this.stop < len(this.input) {
+		return
+	}
+	chunk, _ := io.ReadAll(this.source)
+	this.input = append(this.input, chunk...)
+	if this.stop < len(this.input) {
 		this.emit(TokenIllegal)
 	}
+}
+
+func (this *lexer) readChunk() {
+	n, _ := this.source.Read(this.chunk)
+	this.input = append(this.input, this.chunk[:n]...)
+	clear(this.chunk)
 }
 
 func (this *lexer) peek() rune {
@@ -62,6 +78,9 @@ func (this *lexer) at(offset int) rune {
 }
 func (this *lexer) stepN(n int) {
 	this.stop += n
+	if this.stop >= len(this.input) {
+		this.readChunk()
+	}
 }
 func (this *lexer) step() {
 	this.stepN(1)
