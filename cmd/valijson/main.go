@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -14,15 +15,22 @@ import (
 
 var Version = "dev"
 
+const exampleInput = `{"foo":"bar","baz":[1,2,3]}`
+
 func main() {
 	var format string
-	log.SetFlags(log.Lshortfile | log.Ltime)
-	flags := flag.NewFlagSet(fmt.Sprintf("%s @ %s", filepath.Base(os.Args[0]), Version), flag.ExitOnError)
+	log.SetFlags(0)
+	log.SetPrefix("[LOG] ")
+	program := filepath.Base(os.Args[0])
+	flags := flag.NewFlagSet(fmt.Sprintf("%s @ %s", program, Version), flag.ExitOnError)
 	flags.StringVar(&format, "fmt", "pretty", "How to format the output, one of 'pretty', 'compact', 'verbatim'.")
 	flags.Usage = func() {
-		_, _ = fmt.Fprintf(flags.Output(), "Usage of %s:\n", flags.Name())
-		_, _ = fmt.Fprintf(flags.Output(), "%s [args ...]\n", filepath.Base(os.Args[0]))
-		_, _ = fmt.Fprintln(flags.Output(), "More details here.")
+		_, _ = fmt.Fprintln(flags.Output(), flags.Name())
+		_, _ = fmt.Fprintln(flags.Output(), "> Validates JSON data from stdin, outputs JSON to stdout.")
+		_, _ = fmt.Fprintln(flags.Output(), "> Example usage:")
+		_, _ = fmt.Fprintf(flags.Output(), `$ echo -n '%s' | %s`+"\n", exampleInput, program)
+		validateJSON(flags.Output(), bytes.NewBufferString(exampleInput), "pretty")
+		_, _ = fmt.Fprintln(flags.Output(), "> Flags:")
 		flags.PrintDefaults()
 	}
 	_ = flags.Parse(os.Args[1:])
@@ -30,13 +38,17 @@ func main() {
 		log.Fatalln("Invalid output format:", format)
 	}
 
-	printer := printing.NewPrettyPrinter(os.Stdout)
+	validateJSON(os.Stdout, os.Stdin, format)
+}
+
+func validateJSON(dest io.Writer, source io.Reader, format string) {
+	printer := printing.NewPrettyPrinter(dest)
 	if format == "compact" {
-		printer = printing.NewCompactPrinter(os.Stdout)
+		printer = printing.NewCompactPrinter(dest)
 	} else if format == "verbatim" {
-		printer = printing.NewVerbatimPrinter(os.Stdout)
+		printer = printing.NewVerbatimPrinter(dest)
 	}
-	input, err := io.ReadAll(os.Stdin)
+	input, err := io.ReadAll(source)
 	if err != nil {
 		log.Fatalln(err)
 	}
