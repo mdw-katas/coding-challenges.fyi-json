@@ -44,9 +44,9 @@ func (this *lexer) lex() {
 		return
 	}
 
-	this.lexValue()
-
-	if this.stop < len(this.input) {
+	if !this.lexValue() {
+		this.emit(TokenIllegal)
+	} else if this.stop < len(this.input) {
 		this.emit(TokenIllegal)
 	}
 }
@@ -140,14 +140,8 @@ func (this *lexer) acceptNumber() bool {
 		return false
 	}
 	this.accept(sign...)
-	if !isDigit(this.peek()) {
-		this.stop = this.start
-		return false
-	}
 	if !this.accept(zero) {
-		if this.acceptRun(digits...) == 0 {
-			return false
-		}
+		this.acceptRun(digits...)
 	}
 	if this.accept(decimalPoint) {
 		if this.acceptRun(digits...) == 0 {
@@ -192,7 +186,6 @@ func (this *lexer) acceptString() bool {
 			this.step()
 		}
 	}
-	this.emit(TokenIllegal)
 	return false
 }
 func (this *lexer) acceptArray() bool {
@@ -215,7 +208,6 @@ func (this *lexer) acceptArray() bool {
 	if this.accept(rightSquare) {
 		return true
 	}
-	this.emit(TokenIllegal)
 	return false
 }
 func (this *lexer) acceptObject() bool {
@@ -231,7 +223,6 @@ func (this *lexer) acceptObject() bool {
 	for {
 		this.acceptWhitespace()
 		if !this.acceptString() {
-			this.emit(TokenIllegal)
 			return false
 		} else {
 			this.emit(TokenString)
@@ -240,7 +231,6 @@ func (this *lexer) acceptObject() bool {
 		this.acceptWhitespace()
 
 		if !this.accept(colon) {
-			this.emit(TokenIllegal)
 			return false
 		} else {
 			this.emit(TokenColon)
@@ -249,7 +239,6 @@ func (this *lexer) acceptObject() bool {
 		this.acceptWhitespace()
 
 		if !this.lexValue() {
-			this.emit(TokenIllegal)
 			return false
 		}
 
@@ -268,7 +257,6 @@ func (this *lexer) acceptObject() bool {
 	if this.accept(rightCurly) {
 		return true
 	}
-	this.emit(TokenIllegal)
 	return false
 }
 

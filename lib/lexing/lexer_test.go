@@ -7,12 +7,11 @@ import (
 	"github.com/mdwhatcott/testing/should"
 )
 
-// TODO: 100% test coverage
 // TODO: write acceptance tests that incorporate canonical examples
 func TestLex(t *testing.T) {
 	t.Run("top-level", func(t *testing.T) {
 		testLex(t, "")
-		testLex(t, " \t\r\n", token(TokenWhitespace, " \t\r\n"))
+		testLex(t, " \t\r\n", token(TokenWhitespace, " \t\r\n"), token(TokenIllegal, ""))
 		testLex(t, `null`, token(TokenNull, "null"))
 		testLex(t, ` null `, token(TokenWhitespace, ` `), token(TokenNull, "null"), token(TokenWhitespace, ` `))
 		testLex(t, `true`, token(TokenTrue, "true"))
@@ -25,6 +24,8 @@ func TestLex(t *testing.T) {
 	t.Run("numbers", func(t *testing.T) {
 		testLex(t, `0`, token(TokenNumber, "0"))
 		testLex(t, `0a`, token(TokenNumber, "0"), token(TokenIllegal, "a"))
+		testLex(t, `01`, token(TokenNumber, "0"), token(TokenIllegal, "1"))
+		testLex(t, `1a`, token(TokenNumber, "1"), token(TokenIllegal, "a"))
 		testLex(t, `1`, token(TokenNumber, "1"))
 		testLex(t, `1234567890`, token(TokenNumber, "1234567890"))
 		testLex(t, `0.NaN`, token(TokenIllegal, "0.NaN"))
@@ -34,6 +35,7 @@ func TestLex(t *testing.T) {
 		testLex(t, `-1`, token(TokenNumber, "-1"))
 		testLex(t, `-0`, token(TokenNumber, "-0"))
 		testLex(t, `-0.1`, token(TokenNumber, "-0.1"))
+		testLex(t, `3.7e-`, token(TokenIllegal, "3.7e-"))
 		testLex(t, `3.7e-5`, token(TokenNumber, "3.7e-5"))
 		testLex(t, `3.7e+5`, token(TokenNumber, "3.7e+5"))
 	})
@@ -122,11 +124,23 @@ func TestLex(t *testing.T) {
 			token(TokenObjectStop, `}`),
 		)
 		testLex(t, `{1}`, token(TokenObjectStart, `{`), token(TokenIllegal, `1}`))
+		testLex(t, `{"a"}`,
+			token(TokenObjectStart, `{`),
+			token(TokenString, `"a"`),
+			token(TokenIllegal, `}`),
+		)
 		testLex(t, `{"a":}`,
 			token(TokenObjectStart, `{`),
 			token(TokenString, `"a"`),
 			token(TokenColon, `:`),
 			token(TokenIllegal, `}`),
+		)
+		testLex(t, `{"a":1`,
+			token(TokenObjectStart, `{`),
+			token(TokenString, `"a"`),
+			token(TokenColon, `:`),
+			token(TokenNumber, `1`),
+			token(TokenIllegal, ``),
 		)
 		testLex(t, `{"a":1}`,
 			token(TokenObjectStart, `{`),
