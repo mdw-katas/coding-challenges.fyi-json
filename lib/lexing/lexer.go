@@ -224,10 +224,7 @@ func (this *lexer) acceptArray() bool {
 			break
 		}
 	}
-	if this.accept(rightSquare) {
-		return true
-	}
-	return false
+	return this.accept(rightSquare)
 }
 func (this *lexer) acceptObject() bool {
 	if !this.accept(leftCurly) {
