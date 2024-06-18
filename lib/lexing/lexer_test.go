@@ -8,7 +8,6 @@ import (
 	"github.com/mdwhatcott/testing/should"
 )
 
-// TODO: write acceptance tests that incorporate canonical examples
 func TestLex(t *testing.T) {
 	t.Run("top-level", func(t *testing.T) {
 		testLex(t, "")
