@@ -21,9 +21,20 @@ func NewPrettyPrinter(out io.Writer) Printer {
 	return &pretty{out: out}
 }
 
+func (this *pretty) nested() bool {
+	if len(this.state) == 0 {
+		return false
+	}
+	last := this.state[len(this.state)-1]
+	return last == lexing.TokenArrayStart
+}
+
 func (this *pretty) Print(token lexing.Token) {
 	switch token.Type {
 	case lexing.TokenArrayStart, lexing.TokenObjectStart:
+		if this.nested() {
+			this.indentedNewline()
+		}
 		_, _ = this.out.Write(token.Value)
 		this.state = append(this.state, token.Type)
 		this.items = append(this.items, 0)
@@ -31,8 +42,7 @@ func (this *pretty) Print(token lexing.Token) {
 	case lexing.TokenArrayStop, lexing.TokenObjectStop:
 		this.state = this.state[:len(this.state)-1]
 		if this.items[len(this.items)-1] > 0 {
-			_, _ = fmt.Fprintln(this.out)
-			_, _ = io.WriteString(this.out, strings.Repeat("  ", len(this.state)))
+			this.indentedNewline()
 		}
 		this.items = this.items[:len(this.items)-1]
 		_, _ = this.out.Write(token.Value)
@@ -40,8 +50,7 @@ func (this *pretty) Print(token lexing.Token) {
 		if len(this.state) > 0 {
 			this.items[len(this.items)-1]++
 			if !this.awaitingObjectValue || this.awaitingArrayValue {
-				_, _ = fmt.Fprintln(this.out)
-				_, _ = io.WriteString(this.out, strings.Repeat("  ", len(this.state)))
+				this.indentedNewline()
 			}
 			_, _ = this.out.Write(token.Value)
 		}
@@ -54,4 +63,9 @@ func (this *pretty) Print(token lexing.Token) {
 		_, _ = this.out.Write(token.Value)
 		_, _ = io.WriteString(this.out, " ")
 	}
+}
+
+func (this *pretty) indentedNewline() {
+	_, _ = fmt.Fprintln(this.out)
+	_, _ = io.WriteString(this.out, strings.Repeat("  ", len(this.state)))
 }

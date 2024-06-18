@@ -2,27 +2,30 @@ package printing
 
 import (
 	"bytes"
-	"strings"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/mdwhatcott/coding-challenges.fyi-json/lib/lexing"
+	"github.com/mdwhatcott/coding-challenges.fyi-json/lib/util/git"
 	"github.com/mdwhatcott/testing/should"
 )
 
 func TestPrettyPrinter(t *testing.T) {
+	input, err := os.ReadFile(filepath.Join(git.RootDirectory(), "lib", "lexing", "testdata", "pass1.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected, err := os.ReadFile(filepath.Join(git.RootDirectory(), "lib", "printing", "pretty_test_expected.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	out := &bytes.Buffer{}
-	input := `{"a": [1,2,3 ],"b":"hi" }`
-	expected := `{
-  "a": [
-    1,
-    2,
-    3
-  ],
-  "b": "hi"
-}`
 	printer := NewPrettyPrinter(out)
-	for token := range lexing.Lex(strings.NewReader(input)) {
+	for token := range lexing.Lex(bytes.NewReader(input)) {
 		printer.Print(token)
 	}
-	should.So(t, out.String(), should.Equal, expected)
+	fmt.Println(out.String())
+	should.So(t, out.String(), should.Equal, string(expected))
 }
