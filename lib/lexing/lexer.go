@@ -39,7 +39,7 @@ type Token struct {
 type lexer struct {
 	source io.Reader
 	chunk  []byte
-	input  []byte // TODO: prevent input from buffering the entirety of the source data.
+	input  []byte
 	start  int
 	stop   int
 	output chan Token
@@ -133,7 +133,8 @@ func (this *lexer) emit(tokenType TokenType) {
 		this.stop = len(this.input)
 	}
 	this.output <- Token{Type: tokenType, Value: this.input[this.start:this.stop]}
-	this.start = this.stop
+	this.input = this.input[this.stop:]
+	this.start, this.stop = 0, 0
 }
 
 func (this *lexer) lexValue() bool {
