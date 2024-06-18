@@ -1,9 +1,8 @@
 package printing
 
 import (
-	"fmt"
+	"bytes"
 	"io"
-	"strings"
 
 	"github.com/mdwhatcott/coding-challenges.fyi-json/lib/lexing"
 )
@@ -33,39 +32,48 @@ func (this *pretty) Print(token lexing.Token) {
 	switch token.Type {
 	case lexing.TokenArrayStart, lexing.TokenObjectStart:
 		if this.nested() {
-			this.indentedNewline()
+			this.indent()
 		}
-		_, _ = this.out.Write(token.Value)
+		this.write(token.Value)
 		this.state = append(this.state, token.Type)
 		this.items = append(this.items, 0)
 		this.awaitingArrayValue = true
 	case lexing.TokenArrayStop, lexing.TokenObjectStop:
 		this.state = this.state[:len(this.state)-1]
 		if this.items[len(this.items)-1] > 0 {
-			this.indentedNewline()
+			this.indent()
 		}
 		this.items = this.items[:len(this.items)-1]
-		_, _ = this.out.Write(token.Value)
+		this.write(token.Value)
 	case lexing.TokenNull, lexing.TokenTrue, lexing.TokenFalse, lexing.TokenString, lexing.TokenNumber:
 		if len(this.state) > 0 {
 			this.items[len(this.items)-1]++
 			if !this.awaitingObjectValue || this.awaitingArrayValue {
-				this.indentedNewline()
+				this.indent()
 			}
-			_, _ = this.out.Write(token.Value)
+			this.write(token.Value)
 		}
 		this.awaitingObjectValue = false
 		this.awaitingArrayValue = false
 	case lexing.TokenComma, lexing.TokenIllegal:
-		_, _ = this.out.Write(token.Value)
+		this.write(token.Value)
 	case lexing.TokenColon:
 		this.awaitingObjectValue = true
-		_, _ = this.out.Write(token.Value)
-		_, _ = io.WriteString(this.out, " ")
+		this.write(token.Value)
+		this.write(space)
 	}
 }
 
-func (this *pretty) indentedNewline() {
-	_, _ = fmt.Fprintln(this.out)
-	_, _ = io.WriteString(this.out, strings.Repeat("  ", len(this.state)))
+func (this *pretty) write(data []byte) {
+	_, _ = this.out.Write(data)
 }
+func (this *pretty) indent() {
+	this.write(newline)
+	this.write(bytes.Repeat(indent, len(this.state)))
+}
+
+var (
+	space   = []byte(" ")
+	newline = []byte("\n")
+	indent  = []byte("  ")
+)
