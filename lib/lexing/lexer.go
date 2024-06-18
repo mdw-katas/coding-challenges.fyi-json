@@ -1,9 +1,18 @@
 package lexing
 
 import (
+	"fmt"
 	"io"
 	"slices"
 )
+
+func IsValid(tokens chan Token) bool {
+	var last Token
+	for token := range tokens {
+		last = token
+	}
+	return last.Type != "" && last.Type != TokenIllegal
+}
 
 type TokenType string
 
@@ -50,6 +59,9 @@ func (this *lexer) lex() {
 	if len(this.input) == 0 {
 		return
 	}
+	if string(this.input) == "[0e]" {
+		fmt.Println("HI")
+	}
 	if !this.lexValue() {
 		this.emit(TokenIllegal)
 		return
@@ -85,6 +97,10 @@ func (this *lexer) stepN(n int) {
 func (this *lexer) step() {
 	this.stepN(1)
 }
+func (this *lexer) ignore() bool {
+	this.stop = this.start
+	return false
+}
 func (this *lexer) accept(set ...rune) bool {
 	ok := slices.Index(set, this.peek()) >= 0
 	if ok {
@@ -95,7 +111,7 @@ func (this *lexer) accept(set ...rune) bool {
 func (this *lexer) acceptN(n int, set ...rune) bool {
 	for x := 0; x < n; x++ {
 		if !this.accept(set...) {
-			return false
+			return this.ignore()
 		}
 	}
 	return true
@@ -111,7 +127,7 @@ func (this *lexer) acceptRun(set ...rune) (result int) {
 func (this *lexer) acceptSequence(sequence []rune) bool {
 	for _, s := range sequence {
 		if !this.accept(s) {
-			return false
+			return this.ignore()
 		}
 	}
 	return true
@@ -142,7 +158,7 @@ func (this *lexer) lexValue() bool {
 	} else if this.acceptObject() {
 		this.emit(TokenObjectStop)
 	} else {
-		return false
+		return this.ignore()
 	}
 	this.acceptWhitespace()
 	return true
@@ -156,28 +172,28 @@ func (this *lexer) acceptWhitespace() {
 
 func (this *lexer) acceptNumber() bool {
 	if !couldBeNumber(this.peek()) {
-		return false
+		return this.ignore()
 	}
-	this.accept(sign...)
+	_ = this.accept(sign...)
 	if !this.accept(zero) {
-		this.acceptRun(digits...)
+		_ = this.acceptRun(digits...)
 	}
 	if this.accept(decimalPoint) {
 		if this.acceptRun(digits...) == 0 {
-			return false
+			return this.ignore()
 		}
 	}
 	if this.accept(exponent...) {
-		this.accept(sign...)
+		_ = this.accept(sign...)
 		if this.acceptRun(digits...) == 0 {
-			return false
+			return this.ignore()
 		}
 	}
 	return true
 }
 func (this *lexer) acceptString() bool {
 	if !this.accept(quote) {
-		return false
+		return this.ignore()
 	}
 	for this.stop < len(this.input) {
 		switch this.peek() {
@@ -190,36 +206,42 @@ func (this *lexer) acceptString() bool {
 				if this.acceptN(4, hexDigits...) {
 					continue
 				} else {
-					return false
+					return this.ignore()
 				}
+			default:
+				return this.ignore()
 			}
 		case 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
 			0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
 			0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
 			0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F:
-			return false
+			return this.ignore()
 		case quote:
-			this.accept(quote)
+			_ = this.accept(quote)
 			return true
 		default:
 			this.step()
 		}
 	}
-	return false
+	return this.ignore()
 }
 func (this *lexer) acceptArray() bool {
 	if !this.accept(leftSquare) {
-		return false
+		return this.ignore()
 	}
 	this.emit(TokenArrayStart)
 	if this.accept(rightSquare) {
 		return true
 	}
-	this.lexValue()
+	if !this.lexValue() {
+		return this.accept(rightSquare)
+	}
 	for {
 		if this.accept(comma) {
 			this.emit(TokenComma)
-			this.lexValue()
+			if !this.lexValue() {
+				return this.ignore()
+			}
 		} else {
 			break
 		}
@@ -228,7 +250,7 @@ func (this *lexer) acceptArray() bool {
 }
 func (this *lexer) acceptObject() bool {
 	if !this.accept(leftCurly) {
-		return false
+		return this.ignore()
 	}
 	this.emit(TokenObjectStart)
 	this.acceptWhitespace()
@@ -239,7 +261,7 @@ func (this *lexer) acceptObject() bool {
 	for {
 		this.acceptWhitespace()
 		if !this.acceptString() {
-			return false
+			return this.ignore()
 		} else {
 			this.emit(TokenString)
 		}
@@ -247,7 +269,7 @@ func (this *lexer) acceptObject() bool {
 		this.acceptWhitespace()
 
 		if !this.accept(colon) {
-			return false
+			return this.ignore()
 		} else {
 			this.emit(TokenColon)
 		}
@@ -255,7 +277,7 @@ func (this *lexer) acceptObject() bool {
 		this.acceptWhitespace()
 
 		if !this.lexValue() {
-			return false
+			return this.ignore()
 		}
 
 		this.acceptWhitespace()
@@ -273,7 +295,7 @@ func (this *lexer) acceptObject() bool {
 	if this.accept(rightCurly) {
 		return true
 	}
-	return false
+	return this.ignore()
 }
 
 func couldBeNumber(r rune) bool { return isSign(r) || isDigit(r) }

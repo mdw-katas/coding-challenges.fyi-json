@@ -62,6 +62,7 @@ func TestLex(t *testing.T) {
 		testLex(t, `"\uCDEF"`, token(TokenString, `"\uCDEF"`))
 		testLex(t, `"\u123x"`, token(TokenIllegal, `"\u123x"`))
 		testLex(t, `"`+"\t"+`"`, token(TokenIllegal, `"`+"\t"+`"`))
+		testLex(t, `"\x15"`, token(TokenIllegal, `"\x15"`))
 	})
 	t.Run("arrays", func(t *testing.T) {
 		testLex(t, `[`, token(TokenArrayStart, `[`), token(TokenIllegal, ""))
@@ -75,10 +76,24 @@ func TestLex(t *testing.T) {
 			token(TokenWhitespace, ` `),
 			token(TokenArrayStop, `]`),
 		)
+		testLex(t, `[0e]`,
+			token(TokenArrayStart, `[`),
+			token(TokenIllegal, "0e]"),
+		)
 		testLex(t, `[1]`,
 			token(TokenArrayStart, `[`),
 			token(TokenNumber, "1"),
 			token(TokenArrayStop, `]`),
+		)
+		testLex(t, `[1,]`,
+			token(TokenArrayStart, `[`),
+			token(TokenNumber, "1"),
+			token(TokenComma, ","),
+			token(TokenIllegal, `]`),
+		)
+		testLex(t, `[,1]`,
+			token(TokenArrayStart, `[`),
+			token(TokenIllegal, ",1]"),
 		)
 		testLex(t, `[1,2]`,
 			token(TokenArrayStart, `[`),
