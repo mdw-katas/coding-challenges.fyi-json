@@ -1,7 +1,6 @@
 package lexing
 
 import (
-	"fmt"
 	"io"
 	"slices"
 )
@@ -58,9 +57,6 @@ func (this *lexer) lex() {
 
 	if len(this.input) == 0 {
 		return
-	}
-	if string(this.input) == "[0e]" {
-		fmt.Println("HI")
 	}
 	if !this.lexValue() {
 		this.emit(TokenIllegal)
