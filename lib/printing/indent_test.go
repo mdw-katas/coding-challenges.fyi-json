@@ -2,7 +2,6 @@ package printing
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,7 +11,7 @@ import (
 	"github.com/mdwhatcott/testing/should"
 )
 
-func TestPrettyPrinter(t *testing.T) {
+func TestIndentingPrinter(t *testing.T) {
 	input, err := os.ReadFile(filepath.Join(git.RootDirectory(), "lib", "lexing", "testdata", "pass1.json"))
 	if err != nil {
 		t.Fatal(err)
@@ -22,10 +21,9 @@ func TestPrettyPrinter(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := &bytes.Buffer{}
-	printer := NewPrettyPrinter(out)
+	printer := NewIndentingPrinter(out)
 	for token := range lexing.Lex(bytes.NewReader(input)) {
 		printer.Print(token)
 	}
-	fmt.Println(out.String())
 	should.So(t, out.String(), should.Equal, string(expected))
 }

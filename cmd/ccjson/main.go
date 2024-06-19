@@ -23,18 +23,18 @@ func main() {
 	log.SetPrefix("[LOG] ")
 	program := filepath.Base(os.Args[0])
 	flags := flag.NewFlagSet(fmt.Sprintf("%s @ %s", program, Version), flag.ExitOnError)
-	flags.StringVar(&format, "fmt", "colors", "How to format the output, one of 'colors', 'pretty', 'compact', 'verbatim'.")
+	flags.StringVar(&format, "fmt", "colors", "How to format the output, one of 'colors', 'indent', 'compact', 'verbatim'.")
 	flags.Usage = func() {
 		_, _ = fmt.Fprintln(flags.Output(), flags.Name())
 		_, _ = fmt.Fprintln(flags.Output(), "> Validates JSON data from stdin, outputs JSON to stdout.")
 		_, _ = fmt.Fprintln(flags.Output(), "> Example usage:")
-		_, _ = fmt.Fprintf(flags.Output(), `$ echo -n '%s' | %s -fmt pretty`+"\n", exampleInput, program)
-		validateJSON(flags.Output(), bytes.NewBufferString(exampleInput), "pretty")
+		_, _ = fmt.Fprintf(flags.Output(), `$ echo -n '%s' | %s -fmt indent`+"\n", exampleInput, program)
+		validateJSON(flags.Output(), bytes.NewBufferString(exampleInput), "indent")
 		_, _ = fmt.Fprintln(flags.Output(), "> Flags:")
 		flags.PrintDefaults()
 	}
 	_ = flags.Parse(os.Args[1:])
-	if format != "colors" && format != "pretty" && format != "compact" && format != "verbatim" {
+	if format != "colors" && format != "indent" && format != "compact" && format != "verbatim" {
 		log.Fatalln("Invalid output format:", format)
 	}
 
@@ -58,9 +58,9 @@ func validateJSON(output io.Writer, input io.Reader, format string) {
 func newPrinter(output io.Writer, format string) printing.Printer {
 	switch format {
 	case "colors":
-		return printing.NewColorPrinter(output, printing.NewPrettyPrinter(output))
-	case "pretty":
-		return printing.NewPrettyPrinter(output)
+		return printing.NewColorPrinter(output, printing.NewIndentingPrinter(output))
+	case "indent":
+		return printing.NewIndentingPrinter(output)
 	case "compact":
 		return printing.NewCompactPrinter(output)
 	case "verbatim":

@@ -5,14 +5,6 @@ import (
 	"slices"
 )
 
-func IsValid(tokens chan Token) bool {
-	var last Token
-	for token := range tokens {
-		last = token
-	}
-	return last.Type != "" && last.Type != TokenIllegal
-}
-
 type TokenType string
 
 const (

@@ -1,6 +1,7 @@
 package lexing
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -26,7 +27,15 @@ func TestIntegration(t *testing.T) {
 			}
 			defer func() { _ = file.Close() }()
 
-			should.So(t, IsValid(Lex(file)), should.Equal, strings.HasPrefix(entry.Name(), "pass"))
+			should.So(t, isValid(file), should.Equal, strings.HasPrefix(entry.Name(), "pass"))
 		})
 	}
+}
+
+func isValid(input io.Reader) bool {
+	var last Token
+	for token := range Lex(input) {
+		last = token
+	}
+	return last.Type != "" && last.Type != TokenIllegal
 }

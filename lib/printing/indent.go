@@ -7,7 +7,7 @@ import (
 	"github.com/mdwhatcott/coding-challenges.fyi-json/lib/lexing"
 )
 
-type pretty struct {
+type indent struct {
 	out   io.Writer
 	state []lexing.TokenType
 	items []int
@@ -16,11 +16,11 @@ type pretty struct {
 	awaitingObjectValue bool
 }
 
-func NewPrettyPrinter(out io.Writer) Printer {
-	return &pretty{out: out}
+func NewIndentingPrinter(out io.Writer) Printer {
+	return &indent{out: out}
 }
 
-func (this *pretty) nested() bool {
+func (this *indent) nested() bool {
 	if len(this.state) == 0 {
 		return false
 	}
@@ -28,7 +28,7 @@ func (this *pretty) nested() bool {
 	return last == lexing.TokenArrayStart
 }
 
-func (this *pretty) Print(token lexing.Token) {
+func (this *indent) Print(token lexing.Token) {
 	switch token.Type {
 	case lexing.TokenArrayStart, lexing.TokenObjectStart:
 		if this.nested() {
@@ -64,16 +64,16 @@ func (this *pretty) Print(token lexing.Token) {
 	}
 }
 
-func (this *pretty) write(data []byte) {
+func (this *indent) write(data []byte) {
 	_, _ = this.out.Write(data)
 }
-func (this *pretty) indent() {
+func (this *indent) indent() {
 	this.write(newline)
-	this.write(bytes.Repeat(indent, len(this.state)))
+	this.write(bytes.Repeat(indentation, len(this.state)))
 }
 
 var (
-	space   = []byte(" ")
-	newline = []byte("\n")
-	indent  = []byte("  ")
+	space       = []byte(" ")
+	newline     = []byte("\n")
+	indentation = []byte("  ")
 )
