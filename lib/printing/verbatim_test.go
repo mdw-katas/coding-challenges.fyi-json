@@ -11,8 +11,8 @@ import (
 
 func TestVerbatimPrinter(t *testing.T) {
 	out := &bytes.Buffer{}
-	input := `{"a": [1,2,3 ],"b":"hi" }`
 	printer := NewVerbatimPrinter(out)
+	input := `{"a": [1,2,3 ],"b":"hi" }`
 	for token := range lexing.Lex(strings.NewReader(input)) {
 		printer.Print(token)
 	}

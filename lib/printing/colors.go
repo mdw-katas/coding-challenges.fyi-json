@@ -2,7 +2,6 @@ package printing
 
 import (
 	"io"
-	"runtime"
 
 	"github.com/mdwhatcott/coding-challenges.fyi-json/lib/lexing"
 )
@@ -17,45 +16,45 @@ func NewColorPrinter(out io.Writer, inner Printer) *colors {
 }
 
 func (this *colors) Print(token lexing.Token) {
-	// TODO: string values: green
-	// TODO: object keys: blue
-	// TODO: array and object braces: cyan?
 	switch token.Type {
 	case lexing.TokenNull:
-		this.write(Gray)
-		this.inner.Print(token)
-		this.write(Reset)
+		this.write(gray, token)
+	case lexing.TokenTrue:
+		this.write(green, token)
+	case lexing.TokenFalse:
+		this.write(purple, token)
+	case lexing.TokenNumber:
+		this.write(yellow, token)
+	case lexing.TokenString:
+		this.write(blue, token)
+	case lexing.TokenArrayStart,
+		lexing.TokenArrayStop,
+		lexing.TokenObjectStart,
+		lexing.TokenObjectStop,
+		lexing.TokenComma,
+		lexing.TokenColon:
+		this.write(cyan, token)
+	case lexing.TokenIllegal:
+		this.write(red, token)
 	default:
 		this.inner.Print(token)
 	}
 }
 
-func (this *colors) write(data []byte) {
-	_, _ = this.out.Write(data)
+func (this *colors) write(color []byte, token lexing.Token) {
+	_, _ = this.out.Write(color)
+	this.inner.Print(token)
+	_, _ = this.out.Write(reset)
 }
 
 var (
-	Reset  = []byte("\033[0m")
-	Red    = []byte("\033[31m")
-	Green  = []byte("\033[32m")
-	Yellow = []byte("\033[33m")
-	Blue   = []byte("\033[34m")
-	Purple = []byte("\033[35m")
-	Cyan   = []byte("\033[36m")
-	Gray   = []byte("\033[37m")
-	White  = []byte("\033[97m")
+	reset  = []byte("\033[0m")
+	red    = []byte("\033[31m")
+	green  = []byte("\033[32m")
+	yellow = []byte("\033[33m")
+	blue   = []byte("\033[34m")
+	purple = []byte("\033[35m")
+	cyan   = []byte("\033[36m")
+	gray   = []byte("\033[37m")
+	white  = []byte("\033[97m")
 )
-
-func init() {
-	if runtime.GOOS == "windows" {
-		Reset = nil
-		Red = nil
-		Green = nil
-		Yellow = nil
-		Blue = nil
-		Purple = nil
-		Cyan = nil
-		Gray = nil
-		White = nil
-	}
-}
